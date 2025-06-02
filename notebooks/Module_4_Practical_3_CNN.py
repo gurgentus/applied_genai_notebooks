@@ -12,7 +12,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""# Module 4 - Convolutional Neural Networks""")
+    mo.md("""# Module 4: Practical 3 - Convolutional Neural Networks""")
     return
 
 

@@ -14,7 +14,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""# Module 4: Practice 1 - Fully Connected Neural Networks""")
+    mo.md("""# Module 4: Practical 1 - Fully Connected Neural Networks""")
     return
 
 

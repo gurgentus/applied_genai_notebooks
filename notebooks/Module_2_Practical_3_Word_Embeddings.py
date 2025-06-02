@@ -6,7 +6,7 @@ app = marimo.App(width="medium")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""# Module 2: Activity 3 - Word Embeddings""")
+    mo.md(r"""# Module 2: Practice 3 - Word Embeddings""")
     return
 
 

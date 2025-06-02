@@ -14,7 +14,7 @@ def _():
 def _(mo):
     mo.md(
         r"""
-        # Module 2: Activity 1 - Probability
+        # Module 2: Practice 1 - Probability
 
         """
     )
@@ -227,7 +227,6 @@ def _():
 
         def provide_clue(self, guess):
             """ Provides a noisy clue based on a distribution around the true distance with 20% incorrect information """
-            """ Provides a noisy clue based on a distribution around the true distance """
             true_distance = abs(guess[0] - self.treasure_location[0]) + abs(guess[1] - self.treasure_location[1])
             noise = np.random.choice([0, -1, 1], p=[0.6, 0.2, 0.2]) 
             return max(0, true_distance + noise)

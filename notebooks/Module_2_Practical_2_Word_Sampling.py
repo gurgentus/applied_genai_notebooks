@@ -14,7 +14,7 @@ def _():
 def _(mo):
     mo.md(
         """
-        # Module 2: Activity 2 - Word Sampling
+        # Module 2: Practice 2 - Word Sampling
 
         In the slides, we explored how the **likelihood of a particular phrase** in a text can be represented using **probabilities**. This concept allows us to **generate new text** that is stylistically and contextually similar to the original.  
 

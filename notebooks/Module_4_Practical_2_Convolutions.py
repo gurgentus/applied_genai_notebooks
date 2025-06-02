@@ -6,7 +6,7 @@ app = marimo.App(width="medium")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""# Module 4 - Convolution Intuition""")
+    mo.md("""# Module 4: Practical 2 - Convolution Intuition""")
     return
 
 
