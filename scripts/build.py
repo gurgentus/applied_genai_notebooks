@@ -43,7 +43,7 @@ def generate_index(all_notebooks: List[str], output_dir: str) -> None:
     """Generate the index.html file."""
     print("Generating index.html")
 
-    index_path = os.path.join(output_dir, "index.html")
+    index_path = os.path.join(output_dir, "notebook_index.html")
     os.makedirs(output_dir, exist_ok=True)
 
     try:
