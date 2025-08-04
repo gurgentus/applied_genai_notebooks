@@ -32,7 +32,7 @@ jobs:
 
       - name: 🛠️ Export notebooks
         run: |
-          python scripts/build.py
+          python scripts/build.py --output-dir site
 
       - name: Install MkDocs and Material for MkDocs
         run: uv pip install mkdocs mkdocs-material
