@@ -34,11 +34,18 @@ jobs:
         run: |
           python scripts/build.py
 
+      - name: Install MkDocs and Material for MkDocs
+        run: uv pip install mkdocs mkdocs-material
+      
+      - name: Build MkDocs site
+        run: uv run mkdocs build
+
       - name: 📤 Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: site
 
+          
   deploy:
     needs: build
 

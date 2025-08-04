@@ -1,0 +1,40 @@
+site_name: Applied Generative AI
+
+nav:
+  - Home: index.md
+  - Module 1:
+      - UV Package Manager Installation: Module 1/uv_installation.md
+      - FastAPI Installation: Module 1/fastapi_installation.md
+      - Docker Installation: Module 1/docker_installation.md
+      - Git Setup: Module 1/git_setup.md
+  - Module 3:
+      - First Project Setup: Module 3/gentext_project.md
+  - Module 4:
+      - Neural Network Helper Library Setup: Module 4/nn_code.md
+  - Module 5:
+      - Adding VAE to Helper Library: Module 5/vae_code.md
+  - Module 6:
+      - Adding GAN to Helper Library: Module 6/gan_code.md
+  - Module 7:
+      - Adding RNN to Text Generation API: Module 7/rnn_code.md
+  - Module 8:
+      - Adding Diffusion to Helper Library: Module 8/diffusion_code.md
+  - Module 9:
+      - Fine-tuning an LLM and adding to Text Generation API: Module 9/llm_code.md
+  - Module 13:
+      - Deploy a Stable Diffusion model to the API: Module 13/stable_diffusion.md
+
+site_url: https://mydomain.org/mysite
+theme:
+  name: material
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+plugins:
+    - pdf-export:
+        combined: true
