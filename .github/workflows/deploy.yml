@@ -30,15 +30,15 @@ jobs:
         run: |
           uv pip install marimo
 
-      - name: 🛠️ Export notebooks
-        run: |
-          python scripts/build.py --output-dir site
-
       - name: Install MkDocs and Material for MkDocs
         run: uv pip install mkdocs mkdocs-material
       
       - name: Build MkDocs site
         run: uv run mkdocs build
+
+      - name: 🛠️ Export notebooks
+        run: |
+          python scripts/build.py --output-dir site
 
       - name: 📤 Upload artifact
         uses: actions/upload-pages-artifact@v3
