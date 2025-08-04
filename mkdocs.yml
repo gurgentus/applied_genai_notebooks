@@ -1,7 +1,7 @@
 site_name: Applied Generative AI
 
 nav:
-  - Home: index.md
+  - Home: docs_index.md
   - Module 1:
       - UV Package Manager Installation: Module 1/uv_installation.md
       - FastAPI Installation: Module 1/fastapi_installation.md
