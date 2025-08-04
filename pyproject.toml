@@ -1,0 +1,19 @@
+[project]
+name = "applied-genai-notebooks"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "jupyter>=1.1.1",
+    "marimo>=0.13.15",
+    "matplotlib>=3.10.3",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.16",
+    "mkdocs-pdf-export-plugin>=0.5.10",
+    "nltk>=3.9.1",
+    "numpy>=2.3.0",
+    "requests>=2.32.4",
+    "torch>=2.7.1",
+    "torchvision>=0.22.1",
+]
