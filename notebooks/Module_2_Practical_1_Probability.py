@@ -7,7 +7,7 @@
 
 import marimo
 
-__generated_with = "0.14.12"
+__generated_with = "0.13.15"
 app = marimo.App()
 
 
@@ -115,7 +115,9 @@ def _(mo):
         r"""
     ### Entropy: Measuring Information in a Random Variable
 
-    One surprising, but extremely useful way to think about random variables and their probability distributions is through a concept from physics called **entropy**. To understand it, we turn to Claude Shannon and his famous work on information theory (https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf).
+    One surprising, but extremely useful way to think about random variables and their probability distributions is through a concept from physics called **entropy**. In physics (statistical mechanics) entropy is related to the average amount of information needed to specify the microstate of a system. This has to do with energy levels, Boltzmann distributions and a LOT of math. If you are interested, take a look here: https://math.ucr.edu/home/baez/what_is_entropy/index.html.
+
+    To understand entropy from information theory point of view, we turn to Claude Shannon and his famous work on "A Mathematical Theory of Communication" (https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf).
 
     Consider a random variable \( X \) defined by a **probability distribution** that represents probabilities of events, for example a treasure box having a particular color. A natural question arises:  
     **How much information do we gain when we observe a specific value sampled from this distribution?**
@@ -130,7 +132,7 @@ def _(mo):
 
     ### Definition of Entropy
 
-    Entropy is a measure of the **average amount of information** we expect to gain from observing samples of a random variable. Formally, the **entropy** \( H(P) \) of a probability distribution \( P \) with possible outcomes \( x_1, x_2, \ldots, x_n \) and associated probabilities \( P(x_i) \) is defined as:
+    Formally, the **entropy** \( H(P) \) of a probability distribution \( P \) with possible outcomes \( x_1, x_2, \ldots, x_n \) and associated probabilities \( P(x_i) \) is defined as:
 
     \[
     H(P) = -\sum_{i} P(x_i) \log P(x_i).
@@ -140,6 +142,7 @@ def _(mo):
     - The **negative sign** ensures the entropy is non-negative.
     - The **sum** accounts for the expected information over all possible outcomes.
 
+    Thus, entropy is a measure of the **average amount of information** we expect to gain from observing samples of a random variable. We can think of it as missing information or uncertainty associated with its value. 
     Entropy captures the **uncertainty** or **surprise** inherent in a probability distribution:
 
     - **Higher entropy** means more unpredictability (e.g., a fair coin toss).
