@@ -1,38 +1,49 @@
-# marimo WebAssembly + GitHub Pages Template
+# Applied Generative AI Notebooks
 
-This template repository demonstrates how to export [marimo](https://marimo.io) notebooks to WebAssembly and deploy them to GitHub Pages.
+These notebooks and activities cover fundamental concepts and practical implementations of modern generative AI techniques including neural networks, transformers, diffusion models, and reinforcement learning.
 
-## 📚 Included Examples
+## 📚 Course Modules
 
-- `apps/charts.py`: Interactive data visualization with Altair
-- `notebooks/fibonacci.py`: Interactive Fibonacci sequence calculator
-- `notebooks/penguins.py`: Interactive data analysis with Polars and marimo
+### Core Neural Network Foundations
+- **Module 4: Practical 1** - Fully Connected Neural Networks (with checkpoint system)
+- **Module 4: Practical 2** - Convolution Intuition  
+- **Module 4: Practical 3** - Convolutional Neural Networks
+- **Module 5: Practical** - Variational Autoencoders
+- **Module 6: Practical** - GAN (Generative Adversarial Networks)
+- **Module 7: Practical** - RNN (Recurrent Neural Networks)
+- **Module 7: Practical** - Normalizing Flows
 
-## 🚀 Usage
+### Advanced Generative Methods  
+- **Module 8: Practical 1** - Energy Based Methods
+- **Module 8: Practical 2** - Diffusion Methods 
+- **Module 9: Practical** - Transformer Architecture
 
-1. Fork this repository
-2. Add your marimo files to the `notebooks/` or `apps/` directory
-   1. `notebooks/` notebooks are exported with `--mode edit`
-   2. `apps/` notebooks are exported with `--mode run`
-3. Push to main branch
-4. Go to repository **Settings > Pages** and change the "Source" dropdown to "GitHub Actions"
-5. GitHub Actions will automatically build and deploy to Pages
+### Reinforcement Learning
+- **Module 10: Practical** - Basics of Reinforcement Learning
+- **Module 11** - Reinforcement Learning and LLM
 
-## Including data or assets
+## ✨ Key Features
 
-To include data or assets in your notebooks, add them to the `public/` directory.
+### Interactive Learning
+All notebooks are built with [marimo](https://marimo.io) for:
+- **Real-time execution** with immediate feedback
+- **Interactive widgets** for parameter exploration  
+- **Reproducible results** with proper random seed management
 
-For example, the `apps/charts.py` notebook loads an image asset from the `public/` directory.
+## 🚀 Running the Notebooks
 
-```markdown
-<img src="public/logo.png" width="200" />
-```
+### Local Development
+1. Install dependencies: `uv sync` or `pip install -r requirements.txt`
+2. Run individual notebooks: `marimo edit notebooks/Module_X_Practical_Y.py`
+3. Or run all notebooks: `marimo tutorial intro`
 
-And the `notebooks/penguins.py` notebook loads a CSV dataset from the `public/` directory.
-
+### Checkpoint Usage
+For models with checkpointing (FCNN, Diffusion):
 ```python
-import polars as pl
-df = pl.read_csv(mo.notebook_location() / "public" / "penguins.csv")
+# Save checkpoints during training (automatic)
+# Load specific epoch
+load_checkpoint(model, optimizer, 'checkpoints/model_epoch_010.pth', device)
+# Resume training from checkpoint
 ```
 
 ## 🧪 Testing
