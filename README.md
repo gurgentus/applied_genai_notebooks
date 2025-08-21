@@ -32,10 +32,20 @@ All notebooks are built with [marimo](https://marimo.io) for:
 
 ## 🚀 Running the Notebooks
 
-### Local Development
+### Marimo Notebooks (Interactive)
 1. Install dependencies: `uv sync` or `pip install -r requirements.txt`
 2. Run individual notebooks: `marimo edit notebooks/Module_X_Practical_Y.py`
 3. Or run all notebooks: `marimo tutorial intro`
+
+### Jupyter Notebooks (Traditional)
+Jupyter versions are available in the `jupyter_notebooks/` directory:
+```bash
+# Launch Jupyter Lab
+jupyter lab jupyter_notebooks/
+
+# Or run a specific notebook
+jupyter notebook jupyter_notebooks/Module_4_Practical_1_FCNN.ipynb
+```
 
 ### Checkpoint Usage
 For models with checkpointing (FCNN, Diffusion):
