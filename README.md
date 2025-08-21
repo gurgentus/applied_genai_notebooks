@@ -46,6 +46,30 @@ load_checkpoint(model, optimizer, 'checkpoints/model_epoch_010.pth', device)
 # Resume training from checkpoint
 ```
 
+## 📖 Documentation
+
+### Running the Documentation Site
+The course documentation is built with MkDocs and includes class activities, setup guides, and project instructions.
+
+```bash
+# Install documentation dependencies
+uv add mkdocs-material mkdocs-pdf-export-plugin
+
+# Serve documentation locally
+mkdocs serve
+```
+
+Access the documentation at `http://127.0.0.1:8000`
+
+### Building Documentation
+```bash
+# Build static documentation
+mkdocs build
+
+# Serve built documentation
+python -m http.server -d site
+```
+
 ## 🧪 Testing
 
 To test the export process, run `scripts/build.py` from the root directory.

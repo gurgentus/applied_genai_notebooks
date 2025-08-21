@@ -16,16 +16,11 @@ Before getting started, ensure you have the following installed:
 
 ## Steps to Set Up the FastAPI Project
 
-### 1. Initialize a New FastAPI Project
+### 1. Navigate to Your Project Directory
 
-Run the following command to create a new FastAPI project using UV:
+Navigate to your existing project directory (created in Module 1):
 ```bash
-uv init gentext-app
-```
-
-Navigate into the newly created project directory:
-```bash
-cd gentext-app
+cd sps_genai
 ```
 
 ### 2. Create the Application Directory
@@ -139,12 +134,12 @@ uv sync
 
 Finally, build the Docker image for the application:
 ```bash
-docker build -t gentext-app .
+docker build -t sps-genai .
 ```
 
 After the build completes, you can run the container using:
 ```bash
-docker run -p 8000:8000 gentext-app
+docker run -p 8000:8000 sps-genai
 ```
 
 Access your FastAPI application at: `http://127.0.0.1:8000`
