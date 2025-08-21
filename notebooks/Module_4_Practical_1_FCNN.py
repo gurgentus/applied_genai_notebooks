@@ -1,15 +1,45 @@
 import marimo
 
-__generated_with = "0.11.22"
+__generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
     import marimo as mo
-    import matplotlib.pyplot as plt
+    return (mo,)
+
+
+@app.cell
+def _():
     import numpy as np
-    return mo, np, plt
+    import matplotlib.pyplot as plt
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    import torchvision
+    import torchvision.transforms as transforms
+    from torch.utils.data import DataLoader
+    import torch.nn.functional as F
+
+    torch.manual_seed(42) 
+    np.random.seed(42)
+
+    # Check which GPU is available
+    device = torch.device('mps') if torch.backends.mps.is_available() else torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+    print(f'Using device: {device}')
+    return (
+        DataLoader,
+        device,
+        nn,
+        np,
+        optim,
+        plt,
+        torch,
+        torchvision,
+        transforms,
+    )
 
 
 @app.cell(hide_code=True)
@@ -22,19 +52,28 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-        ### Loss Functions
-        #### Mean Square Loss
-        $\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$
+    ### Loss Functions
 
-        #### Categorical Cross Entropy Loss
-        $-\frac{1}{n}\sum_{i=1}^{n}\sum_{c=1}^{C} y_{i,c} \log(\hat{y}_{i,c})$
+    We start with a brief review of Fully Connected Neural Networks. Recall that in Supervised Learning we tune the parameters of the neural network to minimize the "Loss Function" that represents how close the neural network outputs are to the labels defined in the dataset. There are many choices for loss functions, but the most common are Mean Square Loss for regression problems and Categorial Cross Entropy Loss for classification problems.
 
-        For the classification problems $y_{i,c}$ is equal to $1$ for the correct class, and $0$ otherwise, so we are really just averaging the logarithms of the probability the network outputs for the correct label in the training data.
+    #### **Mean Square Loss**
+    $\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$
 
-          - Loss: $-\log(p_{\text{correct class}})$
-          - Directly uses the index of the correct class
-        """
+    #### **Categorical Cross Entropy Loss**
+    $-\frac{1}{n}\sum_{i=1}^{n}\sum_{c=1}^{C} y_{i,c} \log(\hat{y}_{i,c})$
+
+    For the classification problems the network typically outputs $\hat{y}_{i, c}$ the probability of the example $i$ belonging to the class $c$. In the formula above, $y_{i,c}$ is equal to $1$ for the correct class, and $0$ otherwise, so we are really just averaging the logarithms of the probability the network outputs for the correct label in the training data.
+
+      - Loss: $-\log(p_{\text{correct class}})$
+      - Directly uses the index of the correct class
+    """
     )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""Recall that each artificial neuron in a neural network takes a linear combination of its inputs followed by the application of an activation function. For classification problems, the `softmax` activation function turns the outputs of the final layer into probabilities summing up to 1.""")
     return
 
 
@@ -48,6 +87,12 @@ def _(np):
         exp_x = np.exp(x - np.max(x))  # Subtract max for numerical stability
         return exp_x / exp_x.sum()
     return sigmoid, softmax
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""Here is an example of what a simple Fully Connected Neural Network might looks like. Feel free to experiment with the inputs and the weights to see how they influence the output probabilities. Of course, the goal of training a neural network is to find the weights (coefficients) in each artificial neuron to minimize the loss function on the training examples.""")
+    return
 
 
 @app.cell(hide_code=True)
@@ -67,7 +112,7 @@ def _():
     return var_names, weather_categories, weather_examples
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     h1_weight_array = mo.ui.array([mo.ui.slider(start=-2, stop=2, step=0.2, label=f'''w[{i}]''', value=0) for i in range(4)])
     h2_weight_array = mo.ui.array([mo.ui.slider(start=-2, stop=2, step=0.2, label=f'''w[{i}]''', value=0) for i in range(4)])
@@ -156,8 +201,8 @@ def _(
         "x1": f"x₁\n{var_values[1]}", 
         "x2": f"x₂\n{var_values[2]}", 
         "x3": f"x₃\n{var_values[3]}", 
-        "h1": f"\n\nh₁\n\n $\sigma({h_inputs[0]}) = {h_values[0]}$", 
-        "h2": f"\n\nh₂\n\n $\sigma({h_inputs[1]}) = {h_values[1]}$", 
+        "h1": f"\n\nh₁\n\n" + fr"$\sigma({h_inputs[0]}) = {h_values[0]}$", 
+        "h2": f"\n\nh₂\n\n" + fr"$\sigma({h_inputs[1]}) = {h_values[1]}$", 
         "y1": f"\n\ny₁\n\n ${y_values[0]}$",
         "y2": f"\n\ny₂\n\n ${y_values[1]}$",
         "y3": f"\n\ny₃\n\n ${y_values[2]}$"
@@ -228,26 +273,7 @@ def _(
 
     plt.tight_layout()
     plt.show()
-    return (
-        G,
-        GridSpec,
-        ax_main,
-        ax_sigmoid,
-        edge_labels,
-        edges,
-        example,
-        fig,
-        gs,
-        hidden_layer,
-        input_layer,
-        math,
-        node_labels,
-        nx,
-        output_layer,
-        pos,
-        x,
-        y,
-    )
+    return
 
 
 @app.cell(hide_code=True)
@@ -317,18 +343,17 @@ def _(
     y_values = np.round(softmax(y_inputs), 2) # Using softmax for multi-class classification
 
     mo.vstack([dropdown, mo.hstack([input_array[::-1], label_dropdown], justify="start"), mo.hstack([h1_weight_array, h2_weight_array, mo.vstack([y3_weight_array, y2_weight_array, y1_weight_array])])], justify="start")
-    return h_inputs, h_values, i, v, var_values, w, y_inputs, y_values
+    return h_inputs, h_values, v, var_values, w, y_inputs, y_values
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""Clearly, we need a systematic way to calculate these weights. Below we go over a typical neural network setup and training in PyTorch for the problem of classification of images from the CIFAR10 dataset.""")
+    return
 
 
 @app.cell
-def _(np):
-    import torch
-    import torch.nn as nn
-    import torch.optim as optim
-    import torchvision
-    import torchvision.transforms as transforms
-    from torch.utils.data import DataLoader
-
+def _(np, torchvision, transforms):
     BATCH_SIZE = 32
     CLASSES = np.array(
         [
@@ -350,19 +375,7 @@ def _(np):
 
     train_dataset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     test_dataset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
-    return (
-        BATCH_SIZE,
-        CLASSES,
-        DataLoader,
-        nn,
-        optim,
-        test_dataset,
-        torch,
-        torchvision,
-        train_dataset,
-        transform,
-        transforms,
-    )
+    return BATCH_SIZE, CLASSES, test_dataset, train_dataset
 
 
 @app.cell
@@ -433,20 +446,20 @@ def _(train_dataset, train_loader):
 def _(mo):
     mo.md(
         r"""
-        **Dataloaders** provide multiple ways to access the data, either by converting it into a **Python list** or by using an **iterable**.  
+    **Dataloaders** provide multiple ways to access the data, either by converting it into a **Python list** or by using an **iterable**.  
 
-        Using `list(train_loader)`, as we have, loads the **entire dataset into memory**, which can be **slow** and even **fail** when dealing with large datasets.  
+    Using `list(train_loader)`, as we have, loads the **entire dataset into memory**, which can be **slow** and even **fail** when dealing with large datasets.  
 
-        Since **neural network training algorithms process data in batches**, it is more efficient to use an **iterator**. Instead of retrieving the first batch like this:  
-        ```python
-        list(train_loader)[0]
-        ```
-        which loads everything into memory, we use:
-        ```python
-        next(iter(train_loader))
-        ```
-        This approach retrieves only the first batch without loading the entire dataset, making it memory-efficient and faster.
-        """
+    Since **neural network training algorithms process data in batches**, it is more efficient to use an **iterator**. Instead of retrieving the first batch like this:  
+    ```python
+    list(train_loader)[0]
+    ```
+    which loads everything into memory, we use:
+    ```python
+    next(iter(train_loader))
+    ```
+    This approach retrieves only the first batch without loading the entire dataset, making it memory-efficient and faster.
+    """
     )
     return
 
@@ -455,14 +468,14 @@ def _(mo):
 def _(mo):
     mo.md(
         """
-        Let's load the first batch of our data (image and label) and display it using the `matplotlib` library.
+    Let's load the first batch of our data (image and label) and display it using the `matplotlib` library.
 
-        Recall that the shape returned by 
-        ```python
-        next(iter(train_loader))
-        ```
-        is 32 by 3 by 32 by 32. This shape represents the batch size, number of channels, height, and width of the image, respectively.
-        """
+    Recall that the shape returned by 
+    ```python
+    next(iter(train_loader))
+    ```
+    is 32 by 3 by 32 by 32. This shape represents the batch size, number of channels, height, and width of the image, respectively.
+    """
     )
     return
 
@@ -475,7 +488,7 @@ def _(CLASSES, plt, train_loader):
     plt.imshow(_first_img.permute(1, 2, 0)) # imshow requires the image to be in height x width x channels format
     plt.show()
     print("Label: ", CLASSES[_first_label])
-    return next_batch_images, next_batch_labels
+    return
 
 
 @app.cell(hide_code=True)
@@ -493,7 +506,7 @@ def _():
 
 
 @app.cell
-def _(NUM_CLASSES, nn, torch):
+def _(NUM_CLASSES, device, nn, torch):
     # Build the model
     class MLP(nn.Module):
         def __init__(self):
@@ -510,7 +523,7 @@ def _(NUM_CLASSES, nn, torch):
             x = torch.softmax(self.fc3(x), dim=1)
             return x
 
-    model = MLP()
+    model = MLP().to(device)
     print(model)
 
     # Compare to TensorFlow
@@ -520,7 +533,88 @@ def _(NUM_CLASSES, nn, torch):
     # x = layers.Dense(units=150, activation = 'relu')(x)
     # output_layer = layers.Dense(units=10, activation = 'softmax')(x)
     # model = models.Model(input_layer, output_layer)
-    return MLP, model
+    return (model,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ### Model Checkpoints
+
+    **Checkpoints** are snapshots of the model's state (e.g. model weights) during training that allow you to:
+
+    - Resume training from any point if interrupted
+    - Compare performance across different epochs
+    - Save the best performing model automatically
+    - Experiment with different training strategies
+
+    #### What Gets Saved in a Checkpoint?
+
+    In particular, in this example, the checkpoint will contain:
+
+    - **Model weights** (`model.state_dict()`) - The learned parameters
+    - **Optimizer state** (`optimizer.state_dict()`) - Learning rates, momentum, etc.
+    - **Epoch number** - Which training epoch this represents
+    - **Loss and accuracy** - Performance metrics at this point
+
+    #### Why Save Optimizer State?
+
+    The optimizer state is crucial because modern optimizers like **Adam** maintain:
+
+    - **Adaptive learning rates** per parameter
+    - **Momentum** from previous gradient updates
+    - **Internal counters** for learning rate scheduling
+
+    Without saving optimizer state, resuming training would:
+
+    - Reset learning rates to initial values
+    - Lose accumulated momentum
+    - Potentially cause training instability or slower convergence
+    """
+    )
+    return
+
+
+@app.cell
+def _(torch):
+    import os
+
+    def save_checkpoint(model, optimizer, epoch, loss, accuracy, checkpoint_dir='checkpoints_fcnn'):
+        """Save model checkpoint"""
+        os.makedirs(checkpoint_dir, exist_ok=True)
+
+        checkpoint = {
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+            'accuracy': accuracy
+        }
+
+        # Save latest checkpoint
+        checkpoint_path = os.path.join(checkpoint_dir, f'fcnn_epoch_{epoch:03d}.pth')
+        torch.save(checkpoint, checkpoint_path)
+
+        return checkpoint_path
+
+    def load_checkpoint(model, optimizer, checkpoint_path, device):
+        """Load model checkpoint"""
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+        epoch = checkpoint['epoch']
+        loss = checkpoint['loss']
+        accuracy = checkpoint['accuracy']
+
+        print(f"Loaded checkpoint from epoch {epoch}")
+        print(f"Loss: {loss:.4f}, Accuracy: {accuracy:.2f}%")
+
+        return epoch, loss, accuracy
+
+    return (save_checkpoint,)
 
 
 @app.cell(hide_code=True)
@@ -530,90 +624,165 @@ def _(mo):
 
 
 @app.cell
-def _(EPOCHS, model, nn, optim, torch, train_loader):
+def _(
+    EPOCHS,
+    device,
+    losschart,
+    model,
+    nn,
+    optim,
+    save_checkpoint,
+    torch,
+    train_loader,
+    widget,
+):
+    from tqdm import tqdm
+
+    datalogs = []
+    best_accuracy = 0.0
+
     # Train the model
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
-    correct = 0
-    total = 0
+    # To load from a checkpoint, uncomment the line below:
+    # start_epoch, _, _ = load_checkpoint(model, optimizer, 'checkpoints_fcnn/fcnn_epoch_005.pth', device)
 
     for epoch in range(EPOCHS):
         running_loss = 0.0
-        for ind, data in enumerate(train_loader, 0):
-            inputs, labels = data
+        running_correct, running_total = 0, 0
+
+        model.train()
+        train_loader_with_progress = tqdm(iterable=train_loader, ncols=120, desc=f'Epoch {epoch+1}/{EPOCHS}')
+        for batch_number, (inputs, labels) in enumerate(train_loader_with_progress):
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
             _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            # predicted = torch.argmax(outputs.data)
+
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
-            running_loss += loss.item()
-            if ind % 100 == 99:
-                print(f"[{epoch + 1}, {ind + 1}] accuracy: {correct/total:.3f}, loss: {running_loss / 100:.3f}")
-                running_loss = 0.0
+
+            # log data for tracking
+            running_correct += (predicted == labels).sum().item()
+            running_total += labels.size(0)
+            running_loss += loss.item()  
+
+            if (batch_number % 100 == 99):
+                train_loader_with_progress.set_postfix({'avg accuracy': f'{running_correct/running_total:.3f}', 'avg loss': f'{running_loss/(batch_number+1):.4f}'})
+
+                datalogs.append({
+                    "epoch": epoch + batch_number / len(train_loader), 
+                    "train_loss": running_loss / (batch_number + 1),
+                    "train_accuracy": running_correct/running_total,
+                })
+
+        # Calculate epoch metrics
+        epoch_loss = running_loss / len(train_loader)
+        epoch_accuracy = 100 * running_correct / running_total
+
+        datalogs.append({
+            "epoch": epoch + 1, 
+            "train_loss": epoch_loss,
+            "train_accuracy": running_correct/running_total,
+        })
+
+        # Save checkpoint every epoch
+        checkpoint_path = save_checkpoint(
+            model, optimizer, epoch + 1, epoch_loss, epoch_accuracy
+        )
+
+        # Save best model
+        if epoch_accuracy > best_accuracy:
+            best_accuracy = epoch_accuracy
+            best_path = save_checkpoint(
+                model, optimizer, epoch + 1, epoch_loss, epoch_accuracy, 
+                checkpoint_dir='checkpoints_fcnn/best'
+            )
+            print(f"New best model saved! Accuracy: {epoch_accuracy:.2f}%")
+
+        print(f"Epoch {epoch+1}: Loss={epoch_loss:.4f}, Accuracy={epoch_accuracy:.2f}%")
+        print(f"Checkpoint saved: {checkpoint_path}")
+
+        widget.src = losschart(datalogs)
 
     print("Finished Training")
-    return (
-        correct,
-        criterion,
-        data,
-        epoch,
-        ind,
-        inputs,
-        labels,
-        loss,
-        optimizer,
-        outputs,
-        predicted,
-        running_loss,
-        total,
-    )
-
-
-@app.cell
-def _(correct, data, model, test_loader, torch, total):
-    # Evaluation
-    _correct = 0
-    _total = 0
-    with torch.no_grad():
-        for _data in test_loader:
-            _images, _labels = data
-            _outputs = model(_images)
-            _, _predicted = torch.max(_outputs.data, 1)
-            _total += _labels.size(0)
-            _correct += (_predicted == _labels).sum().item()
-
-    accuracy = 100 * correct / total
-    print(f"Accuracy of the network on the 10000 test images: {accuracy:.2f}%")
-    return (accuracy,)
-
-
-@app.cell(hide_code=True)
-def _(accuracy, mo):
-    mo.md(
-        fr"""
-        The model has an **accuracy of {accuracy:.2f}%** on the test set, which is **better than random guessing** (10 classes).  
-
-        However, this accuracy is **low** compared to **state-of-the-art models**.  
-
-        The **simple model** we built has **limited capacity** to learn the **complex patterns** in the CIFAR-10 dataset.  
-
-        Next, we will build a **more advanced model** using convolutional neural network (CNN) to **improve accuracy** and **learn more complex patterns** in the data.
-        """
-    )
     return
 
 
 @app.cell
-def _(CLASSES, model, np, plt, test_loader, torch):
+def _(plt):
+    import altair as alt
+    from mofresh import refresh_matplotlib, ImageRefreshWidget
+    import polars as pl
+
+    widget = ImageRefreshWidget(src="")
+
+    @refresh_matplotlib
+    def losschart(data):
+        df = pl.DataFrame(data)
+        plt.plot(df["epoch"], df["train_loss"])
+        plt.ylabel("Loss")
+        plt.xlabel("Epoch")
+
+    widget
+    return losschart, widget
+
+
+@app.cell
+def _(device, model, test_loader, torch):
+    # Evaluation
+    test_correct = 0
+    test_total = 0
+    model.eval()
+    with torch.no_grad():
+        for test_images, test_labels in test_loader:
+            test_images = test_images.to(device)
+            test_labels = test_labels.to(device)
+            test_outputs = model(test_images)
+            _, test_predicted = torch.max(test_outputs.data, 1)
+            test_total += test_labels.size(0)
+            test_correct += (test_predicted == test_labels).sum().item()
+
+    test_accuracy = 100 * test_correct / test_total
+    print(f"Accuracy of the network on the 10000 test images: {test_accuracy:.2f}%")
+    return (test_accuracy,)
+
+
+@app.cell(hide_code=True)
+def _(mo, test_accuracy):
+    mo.md(
+        fr"""
+    The model has an **accuracy of {test_accuracy:.2f}%** on the test set, which is **better than random guessing** (10 classes).  
+
+    However, this accuracy is **low** compared to **state-of-the-art models**.  
+
+    The **simple model** we built has **limited capacity** to learn the **complex patterns** in the CIFAR-10 dataset.  
+
+    Next, we will build a **more advanced model** using convolutional neural network (CNN) to **improve accuracy** and **learn more complex patterns** in the data.
+    """
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""We end with seeing how the trained model classified 10 random images from a test batch.""")
+    return
+
+
+@app.cell
+def _(CLASSES, device, model, np, plt, test_loader, torch):
     _images, _labels = next(iter(test_loader))
-    _outputs = model(_images)
+    _images = _images.to(device)
+    _labels = _labels.to(device)
+    _outputs = model(_images).to(device)
     _, preds = torch.max(_outputs, 1)
-    preds_single = CLASSES[preds.numpy()]
-    actual_single = CLASSES[_labels.numpy()]
+    preds_single = CLASSES[preds.cpu().numpy()]
+    actual_single = CLASSES[_labels.cpu().numpy()]
     n_to_show = 10
     indices = np.random.choice(range(len(_images)), n_to_show)
 
@@ -621,7 +790,7 @@ def _(CLASSES, model, np, plt, test_loader, torch):
     _fig.subplots_adjust(hspace=0.4, wspace=0.4)
 
     for _i, idx in enumerate(indices):
-        img = _images[idx].numpy().transpose((1, 2, 0))
+        img = _images[idx].cpu().numpy().transpose((1, 2, 0))
         ax = _fig.add_subplot(1, n_to_show, _i + 1)
         ax.axis("off")
         ax.text(
@@ -642,7 +811,100 @@ def _(CLASSES, model, np, plt, test_loader, torch):
         )
         ax.imshow(img)
     plt.show()
-    return actual_single, ax, idx, img, indices, n_to_show, preds, preds_single
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ### Loading Checkpoints
+
+    The `load_checkpoint()` function restores both the model and optimizer to their exact state from a saved checkpoint.
+
+    #### Function Usage:
+    ```python
+    epoch, loss, accuracy = load_checkpoint(model, optimizer, checkpoint_path, device)
+    ```
+
+    #### Parameters:
+    - **`model`**: The neural network to load weights into
+    - **`optimizer`**: The optimizer to restore state for
+    - **`checkpoint_path`**: Path to the saved checkpoint file
+    - **`device`**: Device to load the checkpoint on ('cpu', 'cuda', 'mps')
+
+    #### Returns:
+    - **`epoch`**: The epoch number when this checkpoint was saved
+    - **`loss`**: The training loss at that epoch
+    - **`accuracy`**: The training accuracy at that epoch
+
+    #### Common Use Cases:
+
+    **1. Resume Training After Interruption:**
+    ```python
+    # Load latest checkpoint and continue from where you left off
+    epoch, _, _ = load_checkpoint(model, optimizer, 'checkpoints_fcnn/fcnn_epoch_025.pth', device)
+
+    # Continue training from epoch + 1
+    for new_epoch in range(epoch, EPOCHS):
+        # training code...
+    ```
+
+    **2. Load Best Model for Inference:**
+    ```python
+    # Load the best performing model (no need for optimizer state in inference)
+    load_checkpoint(model, optimizer, 'checkpoints_fcnn/best/fcnn_epoch_015.pth', device)
+    model.eval()  # Set to evaluation mode
+    # Use model for predictions...
+    ```
+
+    **3. Compare Different Epochs:**
+    ```python
+    # Test epoch 5 performance
+    load_checkpoint(model, optimizer, 'checkpoints_fcnn/fcnn_epoch_005.pth', device)
+    test_model(model)
+
+    # Test epoch 10 performance  
+    load_checkpoint(model, optimizer, 'checkpoints_fcnn/fcnn_epoch_010.pth', device)
+    test_model(model)
+    ```
+
+    #### Important Notes:
+    - The model architecture must match the saved checkpoint
+    - Device mapping handles loading checkpoints across different devices
+    - For inference only, you can pass a dummy optimizer (but it's still required)
+    """
+    )
+    return
+
+
+@app.cell
+def _():
+    # Example: Load a specific checkpoint and test it
+    # Uncomment the lines below to load and test a checkpoint
+
+    # # Create a fresh optimizer for loading
+    # _test_optimizer = optim.Adam(model.parameters(), lr=0.0005)
+    # _epoch, _loss, _accuracy = load_checkpoint(model, _test_optimizer, 'checkpoints_fcnn/fcnn_epoch_005.pth', device)
+
+    # # Test the loaded model
+    # model.eval()
+    # _test_images, _test_labels = next(iter(test_loader))
+    # _test_images = _test_images.to(device)
+    # _test_labels = _test_labels.to(device)
+    # _test_outputs = model(_test_images)
+    # _, _test_preds = torch.max(_test_outputs, 1)
+
+    # print(f"Loaded model from epoch {_epoch}")
+    # print(f"Sample predictions: {CLASSES[_test_preds[:5].cpu().numpy()]}")
+    # print(f"Actual labels: {CLASSES[_test_labels[:5].cpu().numpy()]}")
+
+    return
 
 
 @app.cell

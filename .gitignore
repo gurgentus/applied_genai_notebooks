@@ -176,3 +176,5 @@ cython_debug/
 .marimo
 test/
 data/
+checkpoints*
+old

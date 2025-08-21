@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.11.22"
+__generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 
@@ -8,7 +8,7 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
     import numpy as np
-    return mo, np
+    return (mo,)
 
 
 @app.cell
@@ -69,24 +69,7 @@ def _():
 
     # Encode tokens
     encoded = [vocab.get(word, vocab["<UNK>"]) for word in tokens]
-    return (
-        Counter,
-        DataLoader,
-        Dataset,
-        counter,
-        encoded,
-        end_idx,
-        inv_vocab,
-        nn,
-        re,
-        requests,
-        start_idx,
-        text,
-        tokens,
-        torch,
-        url,
-        vocab,
-    )
+    return DataLoader, Dataset, encoded, inv_vocab, nn, torch
 
 
 @app.cell(hide_code=True)
@@ -112,7 +95,7 @@ def _(DataLoader, Dataset, encoded, torch):
 
     train_datasets = TextDataset(encoded)
     train_loader = DataLoader(train_datasets, batch_size=64, shuffle=True)
-    return SEQ_LEN, TextDataset, train_datasets, train_loader
+    return (train_loader,)
 
 
 @app.cell(hide_code=True)
@@ -144,7 +127,7 @@ def _(device, torch):
     # Example usage:
     mask = causal_attention_mask(10, 10, device)
     print(mask[0].T)
-    return causal_attention_mask, mask
+    return (causal_attention_mask,)
 
 
 @app.cell(hide_code=True)
@@ -229,16 +212,22 @@ def _(TokenAndPositionEmbedding, TransformerBlock, nn):
 
 
 @app.cell
-def train_gpt():
+def _():
+    from tqdm import tqdm
+
     def train_gpt(model, dataloader, optimizer, criterion, epochs, device):
         model.to(device)
         model.train()
 
         for epoch in range(epochs):
             total_loss = 0
-            for data in dataloader:
-                inputs = data[0].to(device)
-                targets = data[1].to(device)
+
+            data_loader_with_progress = tqdm(
+                iterable=dataloader, ncols=120, desc=f"Epoch {epoch+1}/{epochs}"
+            )
+            for batch_number, (inputs, targets) in enumerate(data_loader_with_progress):
+                inputs = inputs.to(device)
+                targets = targets.to(device)
                 optimizer.zero_grad()
                 logits, _ = model(inputs)
                 loss = criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
@@ -246,8 +235,12 @@ def train_gpt():
                 optimizer.step()
 
                 total_loss += loss.item()
-
-            print(f"Epoch {epoch + 1} - Loss: {total_loss / len(dataloader):.4f}")
+                if (batch_number % 100 == 0) or (batch_number == len(dataloader) - 1):
+                    data_loader_with_progress.set_postfix(
+                        {
+                            "avg loss": f"{total_loss/(batch_number+1):.4f}",
+                        }
+                    )            
     return (train_gpt,)
 
 
@@ -255,7 +248,7 @@ def train_gpt():
 def _():
     # Hyperparameters
     # Vocabulary and sequence
-    VOCAB_SIZE = 10000       # Size of your tokenizer vocab
+    VOCAB_SIZE = 2400        # Size of your tokenizer vocab
     MAX_LEN = 128            # Sequence length
 
     # Embedding and model size
@@ -269,12 +262,9 @@ def _():
     EPOCHS = 10
     LEARNING_RATE = 3e-4
     return (
-        BATCH_SIZE,
         EMBEDDING_DIM,
-        EPOCHS,
         FEED_FORWARD_DIM,
         KEY_DIM,
-        LEARNING_RATE,
         MAX_LEN,
         N_HEADS,
         VOCAB_SIZE,
@@ -300,7 +290,7 @@ def _(
     criterion = nn.CrossEntropyLoss() 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     train_gpt(model, train_loader, optimizer, criterion, epochs=10, device=device)
-    return criterion, model, optimizer
+    return (model,)
 
 
 @app.cell(hide_code=True)
@@ -310,7 +300,7 @@ def _(mo):
 
 
 @app.cell
-def _(device, np, torch):
+def _(device, torch):
     class TextGenerator:
         def __init__(self, model, index_to_word, top_k=10):
             self.model = model
@@ -319,9 +309,10 @@ def _(device, np, torch):
             self.word_to_index = {word: idx for idx, word in enumerate(index_to_word)}
 
         def sample_from(self, probs, temperature):
-            probs = probs ** (1 / temperature)
-            probs = probs / np.sum(probs)
-            return np.random.choice(len(probs), p=probs), probs
+            probs[1] = 0  # Mask out UNK token (index 1) to prevent generating <UNK>
+            probs = torch.nn.functional.softmax(probs/temperature, dim=-1)
+            next_id = torch.multinomial(probs, num_samples=1).item()
+            return next_id, probs
 
         def generate(self, start_prompt, max_tokens, temperature):
             self.model.eval()
@@ -334,8 +325,8 @@ def _(device, np, torch):
                     x = torch.tensor([generated_tokens], dtype=torch.long)
                     x = x.to(device)
                     logits, attn_weights = self.model(x)
-                    last_logits = logits[0, -1].cpu().numpy()
-                    sample_token, probs = self.sample_from(np.exp(last_logits), temperature)
+                    last_logits = logits[0, -1] # .cpu().numpy()
+                    sample_token, probs = self.sample_from(last_logits, temperature)
                     generated_tokens.append(sample_token)
                     info.append({
                         "prompt": start_prompt,
@@ -354,8 +345,13 @@ def _(device, np, torch):
 @app.cell
 def _(TextGenerator, inv_vocab, model):
     text_generator = TextGenerator(model, inv_vocab)
-    info = text_generator.generate("captain", max_tokens=180, temperature=2.0)
-    return info, text_generator
+    info = text_generator.generate("captain ", max_tokens=180, temperature=3.0)
+    return
+
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.11.22"
+__generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 
@@ -21,7 +21,7 @@ def _():
     import torchvision.transforms as transforms
     from torch.utils.data import DataLoader
     import torch.nn.functional as F
-    return DataLoader, F, nn, np, optim, plt, torch, torchvision, transforms
+    return DataLoader, F, nn, np, plt, torch, torchvision, transforms
 
 
 @app.cell(hide_code=True)
@@ -34,10 +34,10 @@ def _(mo):
 def _(mo):
     mo.md(
         """
-        Recall that the idea behind Diffusion Models is to map training data to a simple normal distribution by adding noise through a series of steps and then have a neural network **learn** the inverse process.
+    Recall that the idea behind Diffusion Models is to map training data to a simple normal distribution by adding noise through a series of steps and then have a neural network **learn** the inverse process.
 
-        In contrast to autoencoders, the first step is done through simple well defined functions and only the decoder is learned.
-        """
+    In contrast to autoencoders, the first step is done through simple well defined functions and only the decoder is learned.
+    """
     )
     return
 
@@ -51,22 +51,27 @@ def _(torch):
 
 
 @app.cell
-def _(DataLoader, test_dataset, train_dataset):
-    BATCH_SIZE = 32
-    IMAGE_SIZE = 32
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
-    return BATCH_SIZE, IMAGE_SIZE, test_loader, train_loader
+def _(torchvision, transforms):
+    # Prepare the Data
+    transform = transforms.Compose([
+        transforms.CenterCrop(340),
+        transforms.Resize((64, 64)),
+        transforms.ToTensor()
+        # transforms.Normalize((0.5,), (0.5,))
+    ])
+    train_dataset = torchvision.datasets.Flowers102(root='./data', split='train', download=True, transform=transform)
+    test_dataset = torchvision.datasets.Flowers102(root='./data', split='val', download=True, transform=transform)
+
+    return test_dataset, train_dataset
 
 
 @app.cell
-def _(torchvision, transforms):
-    # Prepare the Data
-    transform = transforms.Compose([transforms.Pad(2, -1), transforms.ToTensor(),     transforms.Normalize((0.5,), (0.5,))])
-
-    train_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-    test_dataset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
-    return test_dataset, train_dataset, transform
+def _(DataLoader, test_dataset, train_dataset):
+    BATCH_SIZE = 64
+    IMAGE_SIZE = 64
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    return BATCH_SIZE, IMAGE_SIZE, test_loader, train_loader
 
 
 @app.cell
@@ -80,6 +85,7 @@ def _(train_dataset):
 def _(first_image, first_label, plt):
     def show_image(image, label=None):
         print("Label: ", label)
+        plt.figure(figsize=(4, 3)) 
         plt.imshow(image.permute(1,2,0).squeeze(), cmap='gray')
         plt.show()
     show_image(first_image, first_label)
@@ -90,32 +96,32 @@ def _(first_image, first_label, plt):
 def _(mo):
     mo.md(
         r"""
-        Let's take $x_0$ to be a random variable representing images in our data distribution. We will assume that it has mean $0$ and variance $1$. This is ok since we have preprocessed the training images to have mean $0$ and variance $1$. 
+    Let's take $x_0$ to be a random variable representing images in our data distribution. We will assume that it has mean $0$ and variance $1$. This is ok since we have preprocessed the training images to have mean $0$ and variance $1$. 
 
-        Next, we will corrupt the images by adding standard gaussian noise $\epsilon$ (mean 0, variance 1). How much noise should be added?
+    Next, we will corrupt the images by adding standard gaussian noise $\epsilon$ (mean 0, variance 1). How much noise should be added?
 
-        To keep the transformed distribution having the same mean and variance, we can control the noise amount using a parameter $\beta$:
+    To keep the transformed distribution having the same mean and variance, we can control the noise amount using a parameter $\beta$:
 
-        $x_1 = \sqrt{1-\beta}x_0 + \sqrt{\beta} \epsilon$
+    $x_1 = \sqrt{1-\beta}x_0 + \sqrt{\beta} \epsilon$
 
-        Then if $x_0$ has mean $0$ and variance $1$, $x_1$ will have mean: 
+    Then if $x_0$ has mean $0$ and variance $1$, $x_1$ will have mean: 
 
-        $\sqrt{1-\beta}*0+\sqrt{\beta}*0=0$ 
+    $\sqrt{1-\beta}*0+\sqrt{\beta}*0=0$ 
 
-        and variance: 
+    and variance: 
 
-        $(\sqrt{1-\beta})^2*1 + (\sqrt{\beta})^2*1=1-\beta+\beta=1$.
-        """
+    $(\sqrt{1-\beta})^2*1 + (\sqrt{\beta})^2*1=1-\beta+\beta=1$.
+    """
     )
     return
 
 
 @app.cell
-def _(first_image, np, show_image):
+def _(np):
     def corrupt_image(image, beta = 0.1):
         image_with_noise = np.sqrt(1-beta)*image + np.sqrt(beta)*np.random.normal(0, 1, image.shape)
         return image_with_noise
-    show_image(corrupt_image(first_image))
+    # show_image(corrupt_image(first_image))
     return (corrupt_image,)
 
 
@@ -140,7 +146,7 @@ def _(corrupt_image, first_image, show_image, slider):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We can repeat this process using the new $x_1$ as the input to the next step, and so on, until we reach $x_T$. Moreover, we can also use a different $\beta$ for each step. The setup up of how this parameter should vary is referred to as the **diffusion schedule**.""")
+    mo.md(r"""We can repeat this process using the new $x_1$ as the input to the next step, and so on, until we reach $x_T$. Moreover, we can also use a different $\beta$ for each step. The setup of how this parameter should vary is referred to as the **diffusion schedule**.""")
     return
 
 
@@ -148,55 +154,84 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-        We'll want to repeat this process through several iterations, at each step corrupting the image by a small amount. To make things simpler, we can perform some mathematical magic using the fact that multiplying a Gaussian distribution by a constant results in another Gaussian distribution. Similarly, adding two Gaussians results in a Gaussian.  So, one can show mathematically that for two standard Gaussian random variables: 
+    We'll want to repeat this process through several iterations, at each step corrupting the image by a small amount. To make things simpler, we can perform some mathematical magic using the fact that multiplying a Gaussian distribution by a constant results in another Gaussian distribution. Similarly, adding two Gaussians results in a Gaussian.  So, one can show mathematically that for two standard Gaussian random variables: 
 
-        $A \epsilon_0 + B \epsilon_1 = \left(\sqrt{A^2 + B^2}\right)\epsilon$, where $\epsilon$ is also a Gaussian random variable.
+    $A \epsilon_0 + B \epsilon_1 = \left(\sqrt{A^2 + B^2}\right)\epsilon$, where $\epsilon$ is also a Gaussian random variable.
 
-        Hence,
+    Hence,
 
-        $x_2 = \sqrt{1-\beta_1}x_1 + \sqrt{\beta_1} \epsilon_1 = \sqrt{1-\beta_1}(\sqrt{1-\beta_0}x_0 + \sqrt{\beta_0} \epsilon_0) + \sqrt{\beta_1} \epsilon_1 = \sqrt{(1-\beta_0)(1-\beta_1)}x_0 + \sqrt{\beta_0(1-\beta_1)}\epsilon_0 + \sqrt{\beta_1}\epsilon_1 = \sqrt{(1-\beta_0)(1-\beta_1)}x_0 + \sqrt{1 - (1-\beta_0)(1-\beta_1)}\epsilon$
+    $x_2 = \sqrt{1-\beta_1}x_1 + \sqrt{\beta_1} \epsilon_1 = \sqrt{1-\beta_1}(\sqrt{1-\beta_0}x_0 + \sqrt{\beta_0} \epsilon_0) + \sqrt{\beta_1} \epsilon_1 = \sqrt{(1-\beta_0)(1-\beta_1)}x_0 + \sqrt{\beta_0(1-\beta_1)}\epsilon_0 + \sqrt{\beta_1}\epsilon_1 = \sqrt{(1-\beta_0)(1-\beta_1)}x_0 + \sqrt{1 - (1-\beta_0)(1-\beta_1)}\epsilon$,
 
-        This will be used later.
-        """
+    and so on. This will be used in defining the multipliers for the image (signal rates) and the noise (noise rates).
+    """
     )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Let's look at an example of a diffusion schedule that we'll use in our final model:""")
+    mo.md(r"""Let's look at examples of several diffusion schedules:""")
     return
 
 
 @app.cell
-def _(torch):
-    def linear_diffusion_schedule(diffusion_times):
-        min_rate = 0.0001
-        max_rate = 0.02
+def _(math, torch):
+    def linear_diffusion_schedule(diffusion_times, min_rate=1e-4, max_rate=0.02):
+        """
+        diffusion_times: Tensor of shape (T,) with values in [0, 1)
+        Returns:
+            noise_rates: Tensor of shape (T,)
+            signal_rates: Tensor of shape (T,)
+        """
+        diffusion_times = diffusion_times.to(dtype=torch.float32)
         betas = min_rate + diffusion_times * (max_rate - min_rate)
-        alphas = 1 - betas
+        alphas = 1.0 - betas
         alpha_bars = torch.cumprod(alphas, dim=0)
+
         signal_rates = torch.sqrt(alpha_bars)
-        noise_rates = torch.sqrt(1 - alpha_bars)
+        noise_rates = torch.sqrt(1.0 - alpha_bars)
         return noise_rates, signal_rates
-    return (linear_diffusion_schedule,)
+
+
+    def cosine_diffusion_schedule(diffusion_times):
+        # diffusion_times: Tensor of shape [T] or [B] with values in [0, 1]
+        signal_rates = torch.cos(diffusion_times * math.pi / 2)
+        noise_rates = torch.sin(diffusion_times * math.pi / 2)
+        return noise_rates, signal_rates
+
+    def offset_cosine_diffusion_schedule(diffusion_times, min_signal_rate=0.02, max_signal_rate=0.95):
+        # Flatten diffusion_times to handle any shape
+        original_shape = diffusion_times.shape
+        diffusion_times_flat = diffusion_times.flatten()
+
+        # Compute start and end angles from signal rate bounds
+        start_angle = torch.acos(torch.tensor(max_signal_rate, dtype=torch.float32, device=diffusion_times.device))
+        end_angle = torch.acos(torch.tensor(min_signal_rate, dtype=torch.float32, device=diffusion_times.device))
+
+        # Linearly interpolate angles
+        diffusion_angles = start_angle + diffusion_times_flat * (end_angle - start_angle)
+
+        # Compute signal and noise rates
+        signal_rates = torch.cos(diffusion_angles).reshape(original_shape)
+        noise_rates = torch.sin(diffusion_angles).reshape(original_shape)
+
+        return noise_rates, signal_rates
+
+    return linear_diffusion_schedule, offset_cosine_diffusion_schedule
 
 
 @app.cell
 def _(BATCH_SIZE, IMAGE_SIZE, linear_diffusion_schedule, torch, train_loader):
     images, _ = next(iter(train_loader))
     noises = torch.randn(size=(BATCH_SIZE, 1, IMAGE_SIZE, IMAGE_SIZE))
-    diffusion_times = torch.rand(size=(BATCH_SIZE, 1, 1, 1))
+
+    diffusion_times = torch.rand((BATCH_SIZE,), device=images.device)  # scalar per sample
+    diffusion_times = diffusion_times.view(BATCH_SIZE, 1, 1, 1)         # for broadcasting
+
     noise_rates, signal_rates = linear_diffusion_schedule(diffusion_times)
     noisy_images = signal_rates * images + noise_rates * noises
-    return (
-        diffusion_times,
-        images,
-        noise_rates,
-        noises,
-        noisy_images,
-        signal_rates,
-    )
+
+    return (noisy_images,)
 
 
 @app.cell
@@ -204,7 +239,13 @@ def _(noisy_images, plt):
     from torchvision.utils import make_grid
     grid = make_grid(noisy_images, normalize=True)
     plt.imshow(grid.permute(1, 2, 0))
-    return grid, make_grid
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""The idea is to train a neural network to model the noise that was added. The input to this network will be the noisy image and the variance of the noise that was added (this comes from the diffusion schedule we select). The noise variance is typically encoded using some sort of an embedding, in this case a Sinusoidal Embedding.""")
+    return
 
 
 @app.cell
@@ -226,7 +267,7 @@ def _(nn, torch):
             x = x.expand(-1, 1, 1, self.num_frequencies)
             sin_part = torch.sin(self.angular_speeds * x)
             cos_part = torch.cos(self.angular_speeds * x)
-            return torch.cat([sin_part, cos_part], dim=-1)
+            return torch.cat([sin_part, cos_part], dim=-1)         
     return SinusoidalEmbedding, math
 
 
@@ -239,31 +280,35 @@ def _(mo):
 @app.cell
 def _(F, nn, torch):
     class ResidualBlock(nn.Module):
-        def __init__(self, width):
+        def __init__(self, in_channels, out_channels):
             super().__init__()
-            self.width = width
+            self.needs_projection = in_channels != out_channels
+            if self.needs_projection:
+                self.proj = nn.Conv2d(in_channels, out_channels, kernel_size=1)
+            else:
+                self.proj = nn.Identity()
+
+            self.norm = nn.BatchNorm2d(in_channels, affine=False)
+            self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+            self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+
+        def swish(self, x):
+            return x * torch.sigmoid(x)
 
         def forward(self, x):
-            in_channels = x.shape[1]
-            if in_channels != self.width:
-                skip_conv = nn.Conv2d(in_channels, self.width, kernel_size=1).to(x.device)
-            else:
-                skip_conv = nn.Identity()
-
-            norm = nn.BatchNorm2d(in_channels, affine=False).to(x.device)
-            conv1 = nn.Conv2d(in_channels, self.width, kernel_size=3, padding=1).to(x.device)
-            conv2 = nn.Conv2d(self.width, self.width, kernel_size=3, padding=1).to(x.device)
-
-            residual = skip_conv(x)
-            x = norm(x)
-            x = F.silu(conv1(x))  # Swish = SiLU
-            x = conv2(x)
+            residual = self.proj(x)
+            # x = self.norm(x)
+            x = self.swish(self.conv1(x))
+            x = self.conv2(x)
             return x + residual
 
     class DownBlock(nn.Module):
-        def __init__(self, width, block_depth):
+        def __init__(self, width, block_depth, in_channels):
             super().__init__()
-            self.blocks = nn.ModuleList([ResidualBlock(width) for _ in range(block_depth)])
+            self.blocks = nn.ModuleList()
+            for i in range(block_depth):
+                self.blocks.append(ResidualBlock(in_channels, width))
+                in_channels = width
             self.pool = nn.AvgPool2d(kernel_size=2)
 
         def forward(self, x, skips):
@@ -274,18 +319,22 @@ def _(F, nn, torch):
             return x
 
     class UpBlock(nn.Module):
-        def __init__(self, width, block_depth):
+        def __init__(self, width, block_depth, in_channels):
             super().__init__()
-            self.block_depth = block_depth
-            self.blocks = nn.ModuleList([ResidualBlock(width * 2 if i == 0 else width) for i in range(block_depth)])
+            self.blocks = nn.ModuleList()
+            for _ in range(block_depth):
+                self.blocks.append(ResidualBlock(in_channels + width, width))
+                in_channels = width
 
         def forward(self, x, skips):
             x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=False)
-            for i in range(self.block_depth):
+            for block in self.blocks:
                 skip = skips.pop()
                 x = torch.cat([x, skip], dim=1)
-                x = self.blocks[i](x)
+                x = block(x)
             return x
+
+
     return DownBlock, ResidualBlock, UpBlock
 
 
@@ -301,34 +350,34 @@ def _(DownBlock, F, ResidualBlock, SinusoidalEmbedding, UpBlock, nn, torch):
             self.embedding = SinusoidalEmbedding(num_frequencies=16)
             self.embedding_proj = nn.Conv2d(embedding_dim, 32, kernel_size=1)
 
-            self.down1 = DownBlock(32, block_depth=2)
-            self.down2 = DownBlock(64, block_depth=2)
-            self.down3 = DownBlock(96, block_depth=2)
+            self.down1 = DownBlock(32, in_channels=64, block_depth=2)
+            self.down2 = DownBlock(64, in_channels=32, block_depth=2)
+            self.down3 = DownBlock(96, in_channels=64, block_depth=2) 
 
-            self.mid1 = ResidualBlock(128)
-            self.mid2 = ResidualBlock(128)
+            self.mid1 = ResidualBlock(in_channels=96, out_channels=128)
+            self.mid2 = ResidualBlock(in_channels=128, out_channels=128)
 
-            self.up1 = UpBlock(96, block_depth=2)
-            self.up2 = UpBlock(64, block_depth=2)
-            self.up3 = UpBlock(32, block_depth=2)
+            self.up1 = UpBlock(96, in_channels=128, block_depth=2) 
+            self.up2 = UpBlock(64, block_depth=2, in_channels=96)
+            self.up3 = UpBlock(32, block_depth=2, in_channels=64)
 
             self.final = nn.Conv2d(32, num_channels, kernel_size=1)
-            nn.init.zeros_(self.final.weight)
+            nn.init.zeros_(self.final.weight)  # Keep zero init like TF reference
 
         def forward(self, noisy_images, noise_variances):
             skips = []
             x = self.initial(noisy_images)
-
             noise_emb = self.embedding(noise_variances)  # shape: (B, 1, 1, 32)
-            noise_emb = F.interpolate(noise_emb.permute(0, 3, 1, 2), size=(self.embedding_dim, self.embedding_dim), mode='nearest')
-            x = torch.cat([x, self.embedding_proj(noise_emb)], dim=1)
+            # Upsample to match image size like TF reference
+            noise_emb = F.interpolate(noise_emb.permute(0, 3, 1, 2), size=(self.image_size, self.image_size), mode='nearest')
+            x = torch.cat([x, noise_emb], dim=1)
 
             x = self.down1(x, skips)
-            x = self.down2(x, skips)
-            x = self.down3(x, skips)
+            x = self.down2(x, skips) 
+            x = self.down3(x, skips)    
 
-            x = self.mid1(x)
-            x = self.mid2(x)
+            x = self.mid1(x)     
+            x = self.mid2(x)   
 
             x = self.up1(x, skips)
             x = self.up2(x, skips)
@@ -339,17 +388,25 @@ def _(DownBlock, F, ResidualBlock, SinusoidalEmbedding, UpBlock, nn, torch):
 
 
 @app.cell
-def _(UNet, nn, torch):
+def _(IMAGE_SIZE, nn, show_image, torch):
+    import copy
+
     class DiffusionModel(nn.Module):
         def __init__(self, model, schedule_fn):
             super().__init__()
             self.network = model
-            self.ema_network = UNet(model.image_size, model.num_channels, model.embedding_dim)
-            self.ema_network.load_state_dict(model.state_dict())
-            self.ema_decay = 0.999
+            self.ema_network = copy.deepcopy(model)
+            self.ema_network.eval()
+            self.ema_decay = 0.8
             self.schedule_fn = schedule_fn
             self.normalizer_mean = 0.0
             self.normalizer_std = 1.0
+
+        def to(self, device):
+            # Override to() to ensure both networks move to the same device
+            super().to(device)
+            self.ema_network.to(device)
+            return self
 
         def set_normalizer(self, mean, std):
             self.normalizer_mean = mean
@@ -359,7 +416,14 @@ def _(UNet, nn, torch):
             return torch.clamp(x * self.normalizer_std + self.normalizer_mean, 0.0, 1.0)
 
         def denoise(self, noisy_images, noise_rates, signal_rates, training):
-            network = self.network if training else self.ema_network
+            # Use EMA network for inference, main network for training
+            if training:
+                network = self.network
+                network.train()
+            else:
+                network = self.ema_network
+                network.eval()
+
             pred_noises = network(noisy_images, noise_rates ** 2)
             pred_images = (noisy_images - noise_rates * pred_noises) / signal_rates
             return pred_noises, pred_images
@@ -371,14 +435,22 @@ def _(UNet, nn, torch):
                 t = torch.ones((initial_noise.shape[0], 1, 1, 1), device=initial_noise.device) * (1 - step * step_size)
                 noise_rates, signal_rates = self.schedule_fn(t)
                 pred_noises, pred_images = self.denoise(current_images, noise_rates, signal_rates, training=False)
-                next_t = t - step_size
-                next_noise_rates, next_signal_rates = self.schedule_fn(next_t)
+
+                # Debug generation process
+                if step % max(1, diffusion_steps // 4) == 0:  # Print 4 times during generation
+                    print(f"Generation Step {step}/{diffusion_steps}: t={1-step*step_size:.3f}")
+                    print(f"  Current images std: {current_images.std().item():.4f}")
+                    print(f"  Pred images std: {pred_images.std().item():.4f}")
+                    print(f"  Signal rate: {signal_rates.mean().item():.4f}, Noise rate: {noise_rates.mean().item():.4f}")
+
+                next_diffusion_times = t - step_size
+                next_noise_rates, next_signal_rates = self.schedule_fn(next_diffusion_times)
                 current_images = next_signal_rates * pred_images + next_noise_rates * pred_noises
             return pred_images
 
         def generate(self, num_images, diffusion_steps, image_size=64, initial_noise=None):
             if initial_noise is None:
-                initial_noise = torch.randn((num_images, 1, image_size, image_size), device=next(self.parameters()).device)
+                initial_noise = torch.randn((num_images, self.network.num_channels, image_size, image_size), device=next(self.parameters()).device)
             with torch.no_grad():
                 return self.denormalize(self.reverse_diffusion(initial_noise, diffusion_steps))
 
@@ -393,11 +465,35 @@ def _(UNet, nn, torch):
             pred_noises, _ = self.denoise(noisy_images, noise_rates, signal_rates, training=True)
             loss = loss_fn(pred_noises, noises)
 
+            # Debug prints
+            if torch.rand(1).item() < 0.01:  # Print more frequently to see output
+                print(f"Debug - Loss: {loss.item():.4f}, Noise std: {noises.std().item():.4f}, Pred std: {pred_noises.std().item():.4f}")
+                print(f"Signal rates range: {signal_rates.min().item():.4f}-{signal_rates.max().item():.4f}")
+                print(f"Noise rates range: {noise_rates.min().item():.4f}-{noise_rates.max().item():.4f}")
+
             optimizer.zero_grad()
             loss.backward()
+
+            # Check for gradient issues
+            if torch.rand(1).item() < 0.01:
+                total_norm = 0
+                for p in self.network.parameters():
+                    if p.grad is not None:
+                        param_norm = p.grad.data.norm(2)
+                        total_norm += param_norm.item() ** 2
+                total_norm = total_norm ** (1. / 2)
+                print(f"Gradient norm: {total_norm:.4f}")
+
             optimizer.step()
 
             with torch.no_grad():
+                # Debug EMA update occasionally
+                if torch.rand(1).item() < 0.001:
+                    param_diff = 0
+                    for ema_param, param in zip(self.ema_network.parameters(), self.network.parameters()):
+                        param_diff += (ema_param - param).abs().mean().item()
+                    print(f"EMA Update Debug - Avg param difference: {param_diff:.6f}")
+
                 for ema_param, param in zip(self.ema_network.parameters(), self.network.parameters()):
                     ema_param.copy_(self.ema_decay * ema_param + (1. - self.ema_decay) * param)
 
@@ -416,6 +512,15 @@ def _(UNet, nn, torch):
                 loss = loss_fn(pred_noises, noises)
 
             return loss.item()
+
+        def plot_images(self, epoch=None, logs=None, num_rows=3, num_cols=6):
+            # plot random generated images for visual evaluation of generation quality
+            generated_images = self.generate(
+                num_images=num_rows * num_cols,
+                image_size=IMAGE_SIZE,
+                diffusion_steps=20,
+            ).cpu()
+            show_image(generated_images[0])      
     return (DiffusionModel,)
 
 
@@ -426,23 +531,32 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(torch):
     from tqdm import tqdm
+    import os
 
-    def train_diffusion(model, train_loader, val_loader, optimizer, loss_fn, epochs=10, device='cuda'):
+    def train_diffusion(model, train_loader, val_loader, optimizer, loss_fn, epochs=50, device='cuda', checkpoint_dir='checkpoints'):
+        # Create checkpoint directory
+        os.makedirs(checkpoint_dir, exist_ok=True)
+
         model.to(device)
+        best_val_loss = float('inf')
+
         for epoch in range(epochs):
             model.train()
             train_losses = []
-            loader_with_progress = tqdm(train_loader, desc=f'Epoch {epoch+1}/{epochs} [Train]')
+            loader_with_progress = tqdm(train_loader, ncols=120, desc=f'Epoch {epoch+1}/{epochs} [Train]')
             for images, _  in loader_with_progress:
                 images = images.to(device)
                 loss = model.train_step(images, optimizer, loss_fn)
                 train_losses.append(loss)
+                loader_with_progress.set_postfix(loss=f'{loss:.4f}')
 
             avg_train_loss = sum(train_losses) / len(train_losses)
 
             model.eval()
+            model.plot_images()
+
             val_losses = []
             for images, _ in tqdm(val_loader, desc=f"Epoch {epoch+1} [Val]"):
                 images = images.to(device)
@@ -451,62 +565,121 @@ def _():
 
             avg_val_loss = sum(val_losses) / len(val_losses)
             loader_with_progress.set_postfix(loss=f'{avg_train_loss:.4f}')
-            #print(f"Epoch {epoch+1} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f}")
-    return tqdm, train_diffusion
+
+            # Save checkpoint every epoch
+            checkpoint = {
+                'epoch': epoch + 1,
+                'model_state_dict': model.network.state_dict(),
+                'ema_model_state_dict': model.ema_network.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'train_loss': avg_train_loss,
+                'val_loss': avg_val_loss,
+                'normalizer_mean': model.normalizer_mean,
+                'normalizer_std': model.normalizer_std
+            }
+
+            # Save latest checkpoint
+            checkpoint_path = os.path.join(checkpoint_dir, f'diffusion_epoch_{epoch+1:03d}.pth')
+            torch.save(checkpoint, checkpoint_path)
+
+            # Save best model
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                best_checkpoint_path = os.path.join(checkpoint_dir, 'diffusion_best.pth')
+                torch.save(checkpoint, best_checkpoint_path)
+                print(f"New best model saved at epoch {epoch+1} with val_loss: {avg_val_loss:.4f}")
+
+            print(f"Epoch {epoch+1} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f}")
+            print(f"Checkpoint saved: {checkpoint_path}")
+
+    def load_checkpoint(model, optimizer, checkpoint_path, device='cuda'):
+        """
+        Load a saved checkpoint and restore model, EMA, and optimizer states
+        """
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+
+        model.network.load_state_dict(checkpoint['model_state_dict'])
+        model.ema_network.load_state_dict(checkpoint['ema_model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+        # Restore normalizer settings
+        model.normalizer_mean = checkpoint['normalizer_mean']
+        model.normalizer_std = checkpoint['normalizer_std']
+
+        print(f"Loaded checkpoint from epoch {checkpoint['epoch']}")
+        print(f"Train Loss: {checkpoint['train_loss']:.4f}, Val Loss: {checkpoint['val_loss']:.4f}")
+
+        return checkpoint['epoch']
+
+    return load_checkpoint, train_diffusion
 
 
 @app.cell
 def _(
+    BATCH_SIZE,
     DataLoader,
     DiffusionModel,
     IMAGE_SIZE,
     UNet,
     device,
-    linear_diffusion_schedule,
     nn,
+    offset_cosine_diffusion_schedule,
     test_loader,
     torch,
     train_dataset,
     train_diffusion,
     train_loader,
 ):
-    NOISE_EMBEDDING_SIZE = 32
-    NUM_CHANNELS = 1
+    NOISE_EMBEDDING_SIZE = 64
+    NUM_CHANNELS = 3
     unet = UNet(IMAGE_SIZE, NUM_CHANNELS, NOISE_EMBEDDING_SIZE)
-    diffusion_model = DiffusionModel(unet, linear_diffusion_schedule)
+    diffusion_model = DiffusionModel(unet, offset_cosine_diffusion_schedule)
 
-    optimizer = torch.optim.AdamW(diffusion_model.parameters(), lr=1e-3, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(diffusion_model.network.parameters(), lr=1e-3, weight_decay=1e-4)
     loss_fn = nn.L1Loss()
 
-    mean = 0.0
-    std = 0.0
-    count = 0
-    train_loader_for_stats = DataLoader(train_dataset, batch_size=256)
-    for imgs,_ in train_loader_for_stats:
-        imgs = imgs.view(imgs.size(0), imgs.size(1), -1)
-        mean += imgs.mean(dim=2).sum(0)
-        std += imgs.std(dim=2).sum(0)
-        count += imgs.size(0)
-    mean /= count
-    std /= count
+    # Calculate proper per-channel normalization statistics
+    mean = torch.zeros(NUM_CHANNELS)
+    std = torch.zeros(NUM_CHANNELS)
+    total_samples = 0
 
-    mean = mean.to(device)
-    std = std.to(device)
+    train_loader_for_stats = DataLoader(train_dataset, batch_size=BATCH_SIZE)
+    for imgs, _ in train_loader_for_stats:
+        batch_size = imgs.size(0)
+        # Reshape to (batch_size, channels, height*width)
+        imgs_flat = imgs.view(batch_size, NUM_CHANNELS, -1)
+
+        # Calculate mean and std per channel across all pixels in this batch
+        batch_mean = imgs_flat.mean(dim=(0, 2))  # Mean across batch and spatial dims
+        batch_std = imgs_flat.std(dim=(0, 2))    # Std across batch and spatial dims
+
+        # Accumulate statistics
+        mean += batch_mean * batch_size
+        std += batch_std * batch_size
+        total_samples += batch_size
+
+    # Finalize statistics
+    mean /= total_samples
+    std /= total_samples
+
+    print("Normalization stats - Mean:", mean, "Std:", std)
+    mean = mean.reshape(1, NUM_CHANNELS, 1, 1).to(device)
+    std = std.reshape(1, NUM_CHANNELS, 1, 1).to(device)
     diffusion_model.set_normalizer(mean, std)
-    train_diffusion(diffusion_model, train_loader, test_loader, optimizer, loss_fn, epochs=1, device=device)
-    return (
-        NOISE_EMBEDDING_SIZE,
-        NUM_CHANNELS,
-        count,
-        diffusion_model,
-        imgs,
-        loss_fn,
-        mean,
-        optimizer,
-        std,
-        train_loader_for_stats,
-        unet,
-    )
+    # To load from a checkpoint, uncomment and specify the path:
+    # load_checkpoint(diffusion_model, optimizer, 'checkpoints/diffusion_epoch_010.pth', device=device)
+
+    train_diffusion(diffusion_model, train_loader, test_loader, optimizer, loss_fn, epochs=50, device=device)
+    return diffusion_model, optimizer
+
+
+@app.cell
+def _(device, diffusion_model, load_checkpoint, optimizer):
+    # Example: Load a specific checkpoint and generate images
+    # Uncomment the lines below to load a checkpoint from an earlier epoch
+
+    load_checkpoint(diffusion_model, optimizer, 'checkpoints/diffusion_epoch_048.pth', device=device)
+    return
 
 
 @app.cell
@@ -520,7 +693,15 @@ def _(IMAGE_SIZE, diffusion_model, show_image):
 
     # Plot
     show_image(image)
-    return image, samples
+    return
+
+
+@app.cell
+def _(device, torch):
+    # Test EMA after training
+    test_input = torch.randn(1, 3, 64, 64).to(device)
+    test_noise_var = torch.tensor([[[[0.5]]]]).to(device)
+    return
 
 
 @app.cell

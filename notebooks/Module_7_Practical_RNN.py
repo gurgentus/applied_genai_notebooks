@@ -1,14 +1,13 @@
 import marimo
 
-__generated_with = "0.11.22"
+__generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
     import marimo as mo
-    import numpy as np
-    return mo, np
+    return (mo,)
 
 
 @app.cell(hide_code=True)
@@ -25,20 +24,39 @@ def _(mo):
 
 @app.cell
 def _():
+    import numpy as np
+    import matplotlib.pyplot as plt
     import torch
     import torch.nn as nn
     from torch.utils.data import Dataset, DataLoader
     import re
 
+    torch.manual_seed(42)
+    np.random.seed(42)
+
+    # Check which GPU is available
+    device = (
+        torch.device("mps")
+        if torch.backends.mps.is_available()
+        else torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    )
+
+    print(f"Using device: {device}")
+    return DataLoader, Dataset, device, nn, re, torch
+
+
+@app.cell
+def _(re):
     # Load and preprocess Count of Monte Cristo
     url = "https://www.gutenberg.org/cache/epub/1184/pg1184.txt"
+    #url = "https://www.fulltextarchive.com/book/the-count-of-monte-cristo/index.php"
 
     import requests
     text = requests.get(url).text
 
     # Keep only the main body (remove header/footer)
-    start_idx = text.find("Chapter 1.")
-    end_idx = text.rfind("Chapter 5.") # text.rfind("End of the Project Gutenberg")
+    start_idx = text.find("Chapter 1")
+    end_idx = text.rfind("Chapter 5") # text.rfind("End of the Project Gutenberg")
     text = text[start_idx:end_idx]
 
     # Pre-processing
@@ -61,24 +79,8 @@ def _():
 
     # Encode tokens
     encoded = [vocab.get(word, vocab["<UNK>"]) for word in tokens]
-    return (
-        Counter,
-        DataLoader,
-        Dataset,
-        counter,
-        encoded,
-        end_idx,
-        inv_vocab,
-        nn,
-        re,
-        requests,
-        start_idx,
-        text,
-        tokens,
-        torch,
-        url,
-        vocab,
-    )
+    print(encoded)
+    return encoded, inv_vocab, vocab
 
 
 @app.cell(hide_code=True)
@@ -104,7 +106,7 @@ def _(DataLoader, Dataset, encoded, torch):
 
     train_datasets = TextDataset(encoded)
     train_loader = DataLoader(train_datasets, batch_size=64, shuffle=True)
-    return SEQ_LEN, TextDataset, train_datasets, train_loader
+    return (train_loader,)
 
 
 @app.cell(hide_code=True)
@@ -126,7 +128,7 @@ def _(mo):
 
 
 @app.cell
-def _(nn, torch):
+def _(device, nn, torch):
     class LSTMModel(nn.Module):
         def __init__(self, vocab_size=10000, embedding_dim=100, hidden_dim=128):
             super(LSTMModel, self).__init__()
@@ -139,11 +141,11 @@ def _(nn, torch):
             x, hidden = self.lstm(x, hidden)
             x = self.fc(x)
             return x, hidden
-        
-    model = LSTMModel()
+
+    model = LSTMModel(vocab_size=2400).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
-    return LSTMModel, criterion, model, optimizer
+    return criterion, model, optimizer
 
 
 @app.cell(hide_code=True)
@@ -153,11 +155,20 @@ def _(mo):
 
 
 @app.cell
-def _(criterion, model, optimizer, train_loader):
+def _(criterion, device, model, optimizer, train_loader):
+    from tqdm import tqdm
+
+    EPOCHS = 15
+
     # Training loop
-    for epoch in range(15):
+    for epoch in range(EPOCHS):
         total_loss = 0
-        for inputs, targets in train_loader:
+        train_loader_with_progress = tqdm(
+            iterable=train_loader, ncols=120, desc=f"Epoch {epoch+1}/{EPOCHS}"
+        )
+        for batch_number, (inputs, targets) in enumerate(train_loader_with_progress):
+            inputs = inputs.to(device)
+            targets = targets.to(device)
             outputs, _ = model(inputs)
             loss = criterion(outputs.view(-1, outputs.size(-1)), targets.view(-1))
 
@@ -166,17 +177,23 @@ def _(criterion, model, optimizer, train_loader):
             optimizer.step()
 
             total_loss += loss.item()
-        print(f"Epoch {epoch+1}, Loss: {total_loss/len(train_loader):.4f}")
-    return epoch, inputs, loss, outputs, targets, total_loss
+
+            if (batch_number % 100 == 0) or (batch_number == len(train_loader) - 1):
+                train_loader_with_progress.set_postfix(
+                    {
+                        "avg loss": f"{total_loss/(batch_number+1):.4f}",
+                    }
+                )
+    return
 
 
 @app.cell
-def _(inv_vocab, torch, vocab):
+def _(device, inv_vocab, torch, vocab):
     def generate_text(model, seed_text, length=50, temperature=1.0):
         model.eval()
         words = seed_text.lower().split()
         input_ids = [vocab.get(w, vocab["<UNK>"]) for w in words]
-        input_tensor = torch.tensor(input_ids).unsqueeze(0)
+        input_tensor = torch.tensor(input_ids).unsqueeze(0).to(device)
         hidden = None
 
         with torch.no_grad():
@@ -189,18 +206,19 @@ def _(inv_vocab, torch, vocab):
 
                 # Extend input sequence with new token
                 input_ids.append(next_id)
-                input_tensor = torch.tensor(input_ids).unsqueeze(0)
+                input_tensor = torch.tensor(input_ids).unsqueeze(0).to(device)
 
         return " ".join(words)
     return (generate_text,)
 
 
 @app.cell
-def _(generate_text, model):
-    seed = "the count of monte cristo"
+def _(generate_text, model, vocab):
+    seed = "the sailboat"
+    vocab.get(seed)
     print("\nGenerated Text:\n")
-    print(generate_text(model, seed, length=50))
-    return (seed,)
+    print(generate_text(model, seed, length=150, temperature=1.0))
+    return
 
 
 @app.cell
