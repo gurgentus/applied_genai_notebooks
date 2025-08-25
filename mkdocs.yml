@@ -7,6 +7,7 @@ nav:
       - FastAPI Installation: Module 1/fastapi_installation.md
       - Docker Installation: Module 1/docker_installation.md
       - Git Setup: Module 1/git_setup.md
+      - AWS Setup (Optional): Module 1/aws_cli_installation.md
   - Module 3:
       - First Project Setup: Module 3/gentext_project.md
   - Module 4:
