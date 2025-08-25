@@ -20,17 +20,17 @@ def _():
         capture_output=True,
         text=True,
     )
-    return result, subprocess
+    return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
-        ## Setup
+    ## Setup
 
-        First, we import the *spacy* library and load the large English model.
-        """
+    First, we import the *spacy* library and load the large English model.
+    """
     )
     return
 
@@ -40,14 +40,12 @@ def _():
     import spacy
 
     nlp = spacy.load("en_core_web_lg")
-    return nlp, spacy
+    return (nlp,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """Next, let's define a function to calculate word embeddings based on an input word:"""
-    )
+    mo.md("""Next, let's define a function to calculate word embeddings based on an input word:""")
     return
 
 
@@ -62,9 +60,7 @@ def _(nlp):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""Let's try with the word 'apple'.  For brevity, only the first elements of the embedding vector are displayed:"""
-    )
+    mo.md(r"""Let's try with the word 'apple'.  For brevity, only the first elements of the embedding vector are displayed:""")
     return
 
 
@@ -91,16 +87,16 @@ def _(mo):
 def _(calculate_embedding, word_input_ui):
     word_embedding = calculate_embedding(word_input_ui.value)
     word_embedding[:10]
-    return (word_embedding,)
+    return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
-        ## Similarity
-        Let's add a function to calculate the similarity between two words based on their embeddings:
-        """
+    ## Similarity
+    Let's add a function to calculate the similarity between two words based on their embeddings:
+    """
     )
     return
 
@@ -192,13 +188,7 @@ def _(
     la_word3_embedding = nlp(la_word3_input_ui.value).vector
     la_word = la_word1_embedding + (la_word2_embedding - la_word3_embedding)
     la_word4 = nlp(la_word4_input_ui.value).vector
-    return (
-        la_word,
-        la_word1_embedding,
-        la_word2_embedding,
-        la_word3_embedding,
-        la_word4,
-    )
+    return la_word, la_word4
 
 
 @app.cell
@@ -206,28 +196,28 @@ def _(la_word, la_word4):
     from sklearn.metrics.pairwise import cosine_similarity
 
     print("Cosine similarity: ", cosine_similarity([la_word], [la_word4])[0][0])
-    return (cosine_similarity,)
+    return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
-        ----
-        ## Sentence Embeddings
+    ----
+    ## Sentence Embeddings
 
-        Finally, to calculate an embedding for a sentence, we can just average the embeddings of all the words in that sentence.  We will again use `spacy` to calculate the sentence embeddings.
+    Finally, to calculate an embedding for a sentence, we can just average the embeddings of all the words in that sentence.  We will again use `spacy` to calculate the sentence embeddings.
 
-        ```python
-        query = "What is the capital of France?"
-        info_1 = "The capital of France is Paris"
-        info_2 = "France is a beautiful country"
-        info_3 = "Today is very warm in New York City"
-        print("Response 1 Similarity: ", nlp(query).similarity(nlp(info_1)))
-        print("Response 2 Similarity: ", nlp(query).similarity(nlp(info_2)))
-        print("Response 3 Similarity: ", nlp(query).similarity(nlp(info_3)))
-        ```
-        """
+    ```python
+    query = "What is the capital of France?"
+    info_1 = "The capital of France is Paris"
+    info_2 = "France is a beautiful country"
+    info_3 = "Today is very warm in New York City"
+    print("Response 1 Similarity: ", nlp(query).similarity(nlp(info_1)))
+    print("Response 2 Similarity: ", nlp(query).similarity(nlp(info_2)))
+    print("Response 3 Similarity: ", nlp(query).similarity(nlp(info_3)))
+    ```
+    """
     )
     return
 
@@ -241,14 +231,12 @@ def _(nlp):
     print("Response 1 Similarity: ", nlp(query).similarity(nlp(info_1)))
     print("Response 2 Similarity: ", nlp(query).similarity(nlp(info_2)))
     print("Response 3 Similarity: ", nlp(query).similarity(nlp(info_3)))
-    return info_1, info_2, info_3, query
+    return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""Being able to quickly calculate similarities between a query and target information text is very powerful for Information Retrieval, especially when combined with Large Language Models trained for chat/question answering capabilities."""
-    )
+    mo.md(r"""Being able to quickly calculate similarities between a query and target information text is very powerful for Information Retrieval, especially when combined with Large Language Models trained for chat/question answering capabilities.""")
     return
 
 

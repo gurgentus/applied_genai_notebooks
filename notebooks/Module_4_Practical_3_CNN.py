@@ -401,7 +401,15 @@ def _(
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We can improve the architecture by adding two more common operations: Batch Normalization and Dropout.""")
+    mo.md(
+        r"""
+    We can improve the architecture by adding two more common operations: Batch Normalization and Dropout.
+
+    - Batch Normalization (BatchNorm) is a technique that normalizes the inputs of each layer across a mini-batch to have zero mean and unit variance, then scales and shifts them with learnable parameters. It stabilizes and speeds up training by reducing internal covariate shift.
+
+    - Dropout is a regularization method where, during training, a random fraction of neurons are “dropped” (set to zero) in each forward pass, preventing co-adaptation of features and reducing overfitting.
+    """
+    )
     return
 
 

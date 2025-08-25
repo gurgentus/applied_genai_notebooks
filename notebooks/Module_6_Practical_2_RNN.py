@@ -12,7 +12,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""# Module 7: Practical - RNN""")
+    mo.md("""# Module 6: Practical - RNN""")
     return
 
 

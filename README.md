@@ -2,6 +2,12 @@
 
 These notebooks and activities cover fundamental concepts and practical implementations of modern generative AI techniques including neural networks, transformers, diffusion models, and reinforcement learning.
 
+## 📖 Acknowledgments
+
+Module 5-9 examples are adapted from:
+
+**Foster, D. (2024).** *Generative Deep Learning: Teaching Machines to Paint, Write, Compose, and Play* (2nd ed.). O'Reilly Media.
+
 ## 📚 Course Modules
 
 ### Core Neural Network Foundations
@@ -46,6 +52,17 @@ jupyter lab jupyter_notebooks/
 # Or run a specific notebook
 jupyter notebook jupyter_notebooks/Module_4_Practical_1_FCNN.ipynb
 ```
+
+### HTML Notebooks (View-Only)
+Static HTML versions are available in the `html_notebooks/` directory for easy viewing without installing Jupyter:
+```bash
+# Serve HTML notebooks locally
+python -m http.server -d html_notebooks 8080
+
+# Then open http://localhost:8080 in your browser
+```
+
+Or simply open the HTML files directly in any web browser.
 
 ### Checkpoint Usage
 For models with checkpointing (FCNN, Diffusion):
