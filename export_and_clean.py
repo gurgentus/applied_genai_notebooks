@@ -15,8 +15,18 @@ def clean_jupyter_notebook(notebook_path):
     with open(notebook_path, 'r') as f:
         notebook = json.load(f)
     
+    # Track what constants are used - we'll check if they get removed during cleaning
+    uses_epochs = any('range(EPOCHS)' in ''.join(cell.get('source', [])) or 'EPOCHS}' in ''.join(cell.get('source', [])) 
+                     for cell in notebook.get('cells', []) if cell.get('cell_type') == 'code')
+    uses_num_classes = any('NUM_CLASSES' in ''.join(cell.get('source', [])) and 'NUM_CLASSES =' not in ''.join(cell.get('source', []))
+                          for cell in notebook.get('cells', []) if cell.get('cell_type') == 'code')
+        
+    
     cleaned_cells = []
     has_interactive_elements = False
+    constants_added = False
+    defines_epochs_after_cleaning = False
+    defines_num_classes_after_cleaning = False
     
     for cell in notebook['cells']:
         if cell.get('cell_type') != 'code':
@@ -35,7 +45,6 @@ def clean_jupyter_notebook(notebook_path):
         needs_weather_categories = 'weather_categories' in source
         needs_y_inputs = 'y_inputs' in source and 'y_inputs =' not in source
         needs_h_inputs = 'h_inputs' in source and 'h_inputs =' not in source
-        needs_test_accuracy = 'test_accuracy' in source and 'test_accuracy =' not in source
         needs_vertical_filter = 'vertical_filter' in source and 'vertical_filter =' not in source
         # Shape UI elements are now filtered out entirely, so no need for fallback definitions
         
@@ -77,9 +86,6 @@ def clean_jupyter_notebook(notebook_path):
         if needs_h_inputs:
             cleaned_source = "h_inputs = [1.73, -1.19]\n" + cleaned_source  # Values that give sigmoid outputs of ~0.85, ~0.23
             
-        # If this cell needs test_accuracy, prepend the definition
-        if needs_test_accuracy:
-            cleaned_source = "test_accuracy = 65.4  # Realistic test accuracy for a simple FCNN on CIFAR-10\n" + cleaned_source
             
         # If this cell needs vertical_filter, prepend the definition
         if needs_vertical_filter:
@@ -201,6 +207,7 @@ horizontal_filter = torch.tensor([[-1, -1], [1, 1]], dtype=torch.float32).unsque
                 r'^\s*#\s*Interactive UI elements removed.*$',  # Remove our placeholder comments
                 r'^\s*var_values\s*=\s*\[.*\].*$',  # Remove var_values array definitions
                 r'^\s*(var_values|h_values|weight_values|y_values)\s*=\s*\[.*\].*$',  # Remove specific *_values array definitions only
+                r'^\s*return\s*\(',  # Remove return statements
                 r'^\s*.*_shape_ui.*$',  # Remove any lines referencing shape UI elements
                 r'^\s*input_shape_ui.*$',  # Remove input shape UI references
                 r'^\s*_C\s*=.*$',  # Remove _C variable assignments
@@ -220,10 +227,11 @@ horizontal_filter = torch.tensor([[-1, -1], [1, 1]], dtype=torch.float32).unsque
         
         cleaned_source = '\n'.join(filtered_lines)
         
-        # Skip cells that became empty or only contain comments (but preserve function definitions and important constants)
+        # Skip cells that became empty or only contain comments (but preserve function definitions and important constants)  
         # Also skip cells that reference UI-derived variables
-        important_patterns = ['def ', 'NUM_CLASSES', 'EPOCHS', 'class ', 'test_accuracy', 'model.eval', 'torch.no_grad', 'vertical_filter', 'horizontal_filter', 'torch.tensor']
+        important_patterns = ['def ', 'NUM_CLASSES', 'EPOCHS', 'class ', 'test_accuracy', 'model.eval', 'torch.no_grad', 'vertical_filter', 'horizontal_filter', 'torch.tensor', 'BATCH_SIZE']
         has_important_content = any(pattern in cleaned_source for pattern in important_patterns)
+        
         
         # Skip cells that reference UI-derived dimension variables
         ui_derived_patterns = ['_C', '_H', '_W', 'input_shape =', 'layer_shape =']
@@ -281,6 +289,44 @@ horizontal_filter = torch.tensor([[-1, -1], [1, 1]], dtype=torch.float32).unsque
         
         # Insert warning at the beginning
         cleaned_cells.insert(0, warning_cell)
+    
+    # Check if we need to add missing constants after cleaning
+    missing_constants = set()
+    
+    # Check what constants are still defined after cleaning
+    for cell in cleaned_cells:
+        if cell.get('cell_type') == 'code':
+            source = ''.join(cell.get('source', []))
+            if 'EPOCHS =' in source:
+                defines_epochs_after_cleaning = True
+            if 'NUM_CLASSES =' in source:
+                defines_num_classes_after_cleaning = True
+    
+    # Add missing constants if they're used but not defined
+    if uses_epochs and not defines_epochs_after_cleaning:
+        missing_constants.add('EPOCHS')
+    if uses_num_classes and not defines_num_classes_after_cleaning:
+        missing_constants.add('NUM_CLASSES')
+        
+    # Insert missing constants at the beginning (after warning if present)
+    if missing_constants:
+        constants_source = []
+        if 'EPOCHS' in missing_constants:
+            constants_source.append('EPOCHS = 10')
+        if 'NUM_CLASSES' in missing_constants:
+            constants_source.append('NUM_CLASSES = 10')
+            
+        constants_cell = {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [line + '\n' for line in constants_source]
+        }
+        
+        # Insert after warning if present, otherwise at the beginning
+        insert_index = 1 if has_interactive_elements else 0
+        cleaned_cells.insert(insert_index, constants_cell)
     
     notebook['cells'] = cleaned_cells
     
