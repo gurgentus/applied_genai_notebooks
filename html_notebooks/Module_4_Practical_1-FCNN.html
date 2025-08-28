@@ -3,7 +3,7 @@
 <html>
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Module_7_Practical_RNN</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>Module_4_Practical_1_FCNN</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
 /*-----------------------------------------------------------------------------
 | Copyright (c) Jupyter Development Team.
@@ -14182,12 +14182,30 @@ a.anchor-link {
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Module-7:-Practical---RNN">Module 7: Practical - RNN<a class="anchor-link" href="#Module-7:-Practical---RNN">¶</a></h1>
+<p>⚠️ <strong>Static Version Notice</strong></p>
+<p>This is a static export of an interactive marimo notebook. Some features have been modified for compatibility:</p>
+<ul>
+<li>Interactive UI elements (sliders, dropdowns, text inputs) have been removed</li>
+<li>UI variable references have been replaced with default values</li>
+<li>Some cells may have been simplified or removed entirely</li>
+</ul>
+<p>For the full interactive experience, please run the original marimo notebook (.py file) using:</p>
+<div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>marimo<span class="w"> </span>edit<span class="w"> </span>notebook_name.py
+</pre></div>
+<hr/>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">NUM_CLASSES</span> <span class="o">=</span> <span class="mi">10</span>
+</pre></div>
 </div>
 </div>
-<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Let's improve the simple bigram text generation model we constructed in Module 1. First we construct the vocabulary from 10000 most frequently occuring words, assigning positions based on the frequency of occurance.</p>
+</div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -14199,29 +14217,320 @@ a.anchor-link {
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">DataLoader</span>
-<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">torch.optim</span> <span class="k">as</span> <span class="nn">optim</span>
+<span class="kn">import</span> <span class="nn">torchvision</span>
+<span class="kn">import</span> <span class="nn">torchvision.transforms</span> <span class="k">as</span> <span class="nn">transforms</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
 
-<span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span> 
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
 
 <span class="c1"># Check which GPU is available</span>
-<span class="n">device</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"mps"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span>
-    <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">)</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">)</span>
+<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">'mps'</span><span class="p">)</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">'cuda'</span><span class="p">)</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">'cpu'</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Using device: </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="Module-4:-Practical-1---Fully-Connected-Neural-Networks">Module 4: Practical 1 - Fully Connected Neural Networks<a class="anchor-link" href="#Module-4:-Practical-1---Fully-Connected-Neural-Networks">¶</a></h1>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Loss-Functions">Loss Functions<a class="anchor-link" href="#Loss-Functions">¶</a></h3><p>We start with a brief review of Fully Connected Neural Networks. Recall that in Supervised Learning we tune the parameters of the neural network to minimize the "Loss Function" that represents how close the neural network outputs are to the labels defined in the dataset. There are many choices for loss functions, but the most common are Mean Square Loss for regression problems and Categorial Cross Entropy Loss for classification problems.</p>
+<h4 id="Mean-Square-Loss"><strong>Mean Square Loss</strong><a class="anchor-link" href="#Mean-Square-Loss">¶</a></h4><p>$\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$</p>
+<h4 id="Categorical-Cross-Entropy-Loss"><strong>Categorical Cross Entropy Loss</strong><a class="anchor-link" href="#Categorical-Cross-Entropy-Loss">¶</a></h4><p>$-\frac{1}{n}\sum_{i=1}^{n}\sum_{c=1}^{C} y_{i,c} \log(\hat{y}_{i,c})$</p>
+<p>For the classification problems the network typically outputs $\hat{y}_{i, c}$ the probability of the example $i$ belonging to the class $c$. In the formula above, $y_{i,c}$ is equal to $1$ for the correct class, and $0$ otherwise, so we are really just averaging the logarithms of the probability the network outputs for the correct label in the training data.</p>
+<ul>
+<li>Loss: $-\log(p_{\text{correct class}})$</li>
+<li>Directly uses the index of the correct class</li>
+</ul>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Recall that each artificial neuron in a neural network takes a linear combination of its inputs followed by the application of an activation function. For classification problems, the <code>softmax</code> activation function turns the outputs of the final layer into probabilities summing up to 1.</p>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Activation functions</span>
+<span class="k">def</span> <span class="nf">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">softmax</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">exp_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>  <span class="c1"># Subtract max for numerical stability</span>
+    <span class="k">return</span> <span class="n">exp_x</span> <span class="o">/</span> <span class="n">exp_x</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Here is an example of what a simple Fully Connected Neural Network might looks like. Feel free to experiment with the inputs and the weights to see how they influence the output probabilities. Of course, the goal of training a neural network is to find the weights (coefficients) in each artificial neuron to minimize the loss function on the training examples.</p>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">weather_categories</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'sunny'</span><span class="p">,</span> <span class="s1">'rainy'</span><span class="p">,</span> <span class="s1">'cloudy'</span><span class="p">,</span> <span class="s1">'snowy'</span><span class="p">]</span>
+<span class="c1"># Create sample data for the network</span>
+
+<span class="c1"># Define input variables</span>
+<span class="n">weather_examples</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="mf">28.5</span><span class="p">,</span> <span class="mf">45.0</span><span class="p">,</span> <span class="mf">1015.2</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">18.7</span><span class="p">,</span> <span class="mf">78.3</span><span class="p">,</span> <span class="mf">1008.5</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">22.1</span><span class="p">,</span> <span class="mf">85.6</span><span class="p">,</span> <span class="mf">998.7</span><span class="p">]</span>
+<span class="p">]</span>
+<span class="n">weather_categories</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Sunny"</span><span class="p">,</span> <span class="s2">"Rainy"</span><span class="p">,</span> <span class="s2">"Stormy"</span><span class="p">]</span>
+
+<span class="c1"># Define input variables</span>
+<span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"temperature (°C)"</span><span class="p">,</span> <span class="s2">"humidity (%)"</span><span class="p">,</span> <span class="s2">"pressure (hPa)"</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1">#[1, example["temp"], example["humidity"], example["pressure"]]</span>
+
+<span class="c1"># Define weights (randomly initialized)</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># 3 inputs × 2 hidden neurons</span>
+<span class="c1"># w = np.array([</span>
+<span class="c1">#     [ 0.3, -0.2,  0.1,  0.4],  # temperature weights</span>
+<span class="c1">#     [-0.1,  0.5,  0.2, -0.3],  # humidity weights</span>
+<span class="c1">#     [ 0.2,  0.1, -0.4,  0.1]   # pressure weights</span>
+<span class="c1"># ])</span>
+
+<span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span>       <span class="c1"># 2 hidden neurons × 1 output</span>
+<span class="c1"># Weights for output layer (4 hidden neurons × 3 output classes)</span>
+<span class="c1"># v = np.array([</span>
+<span class="c1">#     [ 0.5,  0.1, -0.3],  # h1 to outputs</span>
+<span class="c1">#     [-0.2,  0.4,  0.1],  # h2 to outputs</span>
+<span class="c1">#     [ 0.1, -0.1,  0.5],  # h3 to outputs</span>
+<span class="c1">#     [-0.1,  0.3,  0.2]   # h4 to outputs</span>
+<span class="c1"># ])</span>
+
+
+<span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+<span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+<span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+
+<span class="c1"># Calculate hidden layer values</span>
+<span class="n">h_inputs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+    <span class="n">h_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">w</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.72</span><span class="p">,</span> <span class="mf">0.34</span><span class="p">,</span> <span class="mf">0.89</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">h_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">h_inputs</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Calculate output values</span>
+<span class="n">y_inputs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">y_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.23</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">y_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">softmax</span><span class="p">(</span><span class="n">y_inputs</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># Using softmax for multi-class classification</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">h_inputs</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.73</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.19</span><span class="p">]</span>
+<span class="n">y_inputs</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.3</span><span class="p">]</span>
+<span class="n">weather_categories</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'sunny'</span><span class="p">,</span> <span class="s1">'rainy'</span><span class="p">,</span> <span class="s1">'cloudy'</span><span class="p">,</span> <span class="s1">'snowy'</span><span class="p">]</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">matplotlib.gridspec</span> <span class="kn">import</span> <span class="n">GridSpec</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">gs</span> <span class="o">=</span> <span class="n">GridSpec</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">height_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="c1"># Main network diagram in top area (spanning 3 columns)</span>
+<span class="n">ax_main</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+
+<span class="c1"># Create a directed graph</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+
+<span class="c1"># Add nodes with positions</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"x1"</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">"x2"</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="s2">"x3"</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s2">"bias"</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">),</span> <span class="c1"># Input layer</span>
+    <span class="s2">"h1"</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="s2">"h2"</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">),</span>            <span class="c1"># Hidden layer</span>
+    <span class="s2">"y1"</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">"y2"</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="s2">"y3"</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>               <span class="c1"># Output layer</span>
+<span class="p">}</span>
+
+<span class="c1"># Add nodes</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([</span><span class="s2">"x1"</span><span class="p">,</span> <span class="s2">"x2"</span><span class="p">,</span> <span class="s2">"x3"</span><span class="p">,</span> <span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"h1"</span><span class="p">,</span> <span class="s2">"h2"</span><span class="p">,</span> <span class="s2">"y1"</span><span class="p">,</span> <span class="s2">"y2"</span><span class="p">,</span> <span class="s2">"y3"</span><span class="p">])</span>
+
+<span class="c1"># Add edges</span>
+<span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">"x1"</span><span class="p">,</span> <span class="s2">"h1"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"x1"</span><span class="p">,</span> <span class="s2">"h2"</span><span class="p">),</span> 
+    <span class="p">(</span><span class="s2">"x2"</span><span class="p">,</span> <span class="s2">"h1"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"h1"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"x2"</span><span class="p">,</span> <span class="s2">"h2"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"x3"</span><span class="p">,</span> <span class="s2">"h1"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"x3"</span><span class="p">,</span> <span class="s2">"h2"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"h1"</span><span class="p">,</span> <span class="s2">"y1"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"h2"</span><span class="p">,</span> <span class="s2">"y1"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"h1"</span><span class="p">,</span> <span class="s2">"y2"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"h2"</span><span class="p">,</span> <span class="s2">"y2"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"h1"</span><span class="p">,</span> <span class="s2">"y3"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"h2"</span><span class="p">,</span> <span class="s2">"y3"</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+<span class="c1"># Draw the graph</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span> 
+        <span class="n">node_color</span><span class="o">=</span><span class="p">[</span><span class="s2">"lightblue"</span><span class="p">,</span> <span class="s2">"lightblue"</span><span class="p">,</span> <span class="s2">"lightblue"</span><span class="p">,</span> <span class="s2">"lightblue"</span><span class="p">,</span> <span class="s2">"lightgreen"</span><span class="p">,</span> <span class="s2">"lightgreen"</span><span class="p">,</span> <span class="s2">"salmon"</span><span class="p">,</span> <span class="s2">"salmon"</span><span class="p">,</span> <span class="s2">"salmon"</span><span class="p">],</span>
+        <span class="n">arrowsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">arrowstyle</span><span class="o">=</span><span class="s1">'-&gt;'</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_main</span><span class="p">)</span>
+
+<span class="c1"># Add custom node labels with interpolated values</span>
+<span class="n">node_labels</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"bias"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">,</span>
+    <span class="s2">"x1"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"x₁</span><span class="se">\n</span><span class="si">{</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.72</span><span class="p">,</span><span class="w"> </span><span class="mf">0.34</span><span class="p">,</span><span class="w"> </span><span class="mf">0.89</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> 
+    <span class="s2">"x2"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"x₂</span><span class="se">\n</span><span class="si">{</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.72</span><span class="p">,</span><span class="w"> </span><span class="mf">0.34</span><span class="p">,</span><span class="w"> </span><span class="mf">0.89</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> 
+    <span class="s2">"x3"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"x₃</span><span class="se">\n</span><span class="si">{</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.72</span><span class="p">,</span><span class="w"> </span><span class="mf">0.34</span><span class="p">,</span><span class="w"> </span><span class="mf">0.89</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> 
+    <span class="s2">"h1"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\n\n</span><span class="s2">h₁</span><span class="se">\n\n</span><span class="s2">"</span> <span class="o">+</span> <span class="sa">fr</span><span class="s2">"$\sigma(input) = </span><span class="si">{</span><span class="p">[</span><span class="mf">0.85</span><span class="p">,</span><span class="w"> </span><span class="mf">0.23</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">$"</span><span class="p">,</span> 
+    <span class="s2">"h2"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\n\n</span><span class="s2">h₂</span><span class="se">\n\n</span><span class="s2">"</span> <span class="o">+</span> <span class="sa">fr</span><span class="s2">"$\sigma(input) = </span><span class="si">{</span><span class="p">[</span><span class="mf">0.85</span><span class="p">,</span><span class="w"> </span><span class="mf">0.23</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">$"</span><span class="p">,</span> 
+    <span class="s2">"y1"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\n\n</span><span class="s2">y₁</span><span class="se">\n\n</span><span class="s2"> $</span><span class="si">{</span><span class="p">[</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.7</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">$"</span><span class="p">,</span>
+    <span class="s2">"y2"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\n\n</span><span class="s2">y₂</span><span class="se">\n\n</span><span class="s2"> $</span><span class="si">{</span><span class="p">[</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.7</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">$"</span><span class="p">,</span>
+    <span class="s2">"y3"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\n\n</span><span class="s2">y₃</span><span class="se">\n\n</span><span class="s2"> $</span><span class="si">{</span><span class="p">[</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.7</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">$"</span>
+<span class="p">}</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_labels</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">node_labels</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">font_weight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_main</span><span class="p">)</span>
+
+<span class="c1"># Add edge labels with actual weight values</span>
+<span class="n">edge_labels</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"h1"</span><span class="p">):</span> <span class="sa">fr</span><span class="s2">"$\times(w)$"</span><span class="p">,</span> 
+    <span class="p">(</span><span class="s2">"x1"</span><span class="p">,</span> <span class="s2">"h1"</span><span class="p">):</span> <span class="sa">fr</span><span class="s2">"$\times(w)$"</span><span class="p">,</span> 
+    <span class="c1"># ("x1", "h2"): fr"$\times(w)$", </span>
+    <span class="p">(</span><span class="s2">"x2"</span><span class="p">,</span> <span class="s2">"h1"</span><span class="p">):</span> <span class="sa">fr</span><span class="s2">"$\times(w)$"</span><span class="p">,</span> 
+    <span class="c1"># ("x2", "h2"): f"w3=w",</span>
+    <span class="p">(</span><span class="s2">"x3"</span><span class="p">,</span> <span class="s2">"h1"</span><span class="p">):</span> <span class="sa">fr</span><span class="s2">"$\times(w)$"</span><span class="p">,</span> 
+    <span class="c1"># ("x3", "h2"): f"w5=w",</span>
+    <span class="p">(</span><span class="s2">"h1"</span><span class="p">,</span> <span class="s2">"y1"</span><span class="p">):</span> <span class="sa">fr</span><span class="s2">"$\times(w)$"</span><span class="p">,</span> 
+    <span class="p">(</span><span class="s2">"h2"</span><span class="p">,</span> <span class="s2">"y1"</span><span class="p">):</span> <span class="sa">fr</span><span class="s2">"$\times(w)$"</span>
+<span class="p">}</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edge_labels</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">edge_labels</span><span class="o">=</span><span class="n">edge_labels</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_main</span><span class="p">)</span>
+
+<span class="c1"># Add layer titles</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="s2">"INPUT LAYER"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="s2">"HIDDEN LAYER"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="s2">"OUTPUT LAYER"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"Pressure"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">'italic'</span><span class="p">)</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">"Humidity"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">'italic'</span><span class="p">)</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"Temperature"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">'italic'</span><span class="p">)</span>
+
+
+<span class="c1"># Add activation function labels</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="s2">"Activation: Sigmoid"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">'italic'</span><span class="p">)</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="s2">"Activation: Softmax"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">'italic'</span><span class="p">)</span>
+
+<span class="n">example</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">weather_categories</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">'blue'</span> <span class="k">if</span> <span class="n">example</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="s1">'black'</span><span class="p">)</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">weather_categories</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">'blue'</span> <span class="k">if</span> <span class="n">example</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">'black'</span><span class="p">)</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">weather_categories</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">'blue'</span> <span class="k">if</span> <span class="n">example</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">'black'</span><span class="p">)</span>
+
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7</span><span class="p">,</span> <span class="s2">"Loss: -log(0.7) = 0.357"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">'italic'</span><span class="p">)</span>
+
+
+<span class="c1"># Color-code the layers with background shapes</span>
+<span class="n">input_layer</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'blue'</span><span class="p">)</span>
+<span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'green'</span><span class="p">)</span>
+<span class="n">output_layer</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="mf">2.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'red'</span><span class="p">)</span>
+
+<span class="n">ax_main</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">input_layer</span><span class="p">)</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">hidden_layer</span><span class="p">)</span>
+<span class="n">ax_main</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">output_layer</span><span class="p">)</span>
+
+<span class="c1"># Add a sigmoid activation function plot in the bottom area</span>
+<span class="n">ax_sigmoid</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># Plot the sigmoid function</span>
+<span class="n">ax_sigmoid</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">'b-'</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">ax_sigmoid</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Sigmoid Activation Function: σ(z) = 1/(1+e^(-z))'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">ax_sigmoid</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'Input (z)'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">ax_sigmoid</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Output: σ(z)'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">ax_sigmoid</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">ax_sigmoid</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">ax_sigmoid</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
+
+
+<span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">,</span> <span class="s2">"softmax(logits)"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Clearly, we need a systematic way to calculate these weights. Below we go over a typical neural network setup and training in PyTorch for the problem of classification of images from the CIFAR10 dataset.</p>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">CLASSES</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="s2">"airplane"</span><span class="p">,</span>
+        <span class="s2">"automobile"</span><span class="p">,</span>
+        <span class="s2">"bird"</span><span class="p">,</span>
+        <span class="s2">"cat"</span><span class="p">,</span>
+        <span class="s2">"deer"</span><span class="p">,</span>
+        <span class="s2">"dog"</span><span class="p">,</span>
+        <span class="s2">"frog"</span><span class="p">,</span>
+        <span class="s2">"horse"</span><span class="p">,</span>
+        <span class="s2">"ship"</span><span class="p">,</span>
+        <span class="s2">"truck"</span><span class="p">,</span>
+    <span class="p">]</span>
 <span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Using device: </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="c1"># Prepare the Data</span>
+<span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">()])</span>
+
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">CIFAR10</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s1">'./data'</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+<span class="n">test_dataset</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">CIFAR10</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s1">'./data'</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-</div>
-</div>
-<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Since we are training the model to predict the next word in a sequence, we will construct our training set features based on 30 word sequences from the text. The corresponding labels are the sequences shifted by one word.</p>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -14229,21 +14538,11 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Create sequences</span>
-<span class="n">SEQ_LEN</span> <span class="o">=</span> <span class="mi">30</span>
-<span class="k">class</span> <span class="nc">TextDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
-
-    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">-</span> <span class="n">SEQ_LEN</span>
-
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">:</span><span class="n">idx</span><span class="o">+</span><span class="n">SEQ_LEN</span><span class="p">]),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">idx</span><span class="o">+</span><span class="n">SEQ_LEN</span><span class="o">+</span><span class="mi">1</span><span class="p">]))</span>
-
-<span class="n">train_datasets</span> <span class="o">=</span> <span class="n">TextDataset</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span>
-<span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_datasets</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">_img</span><span class="p">,</span> <span class="n">_label</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Label: "</span><span class="p">,</span> <span class="n">_label</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Class: "</span><span class="p">,</span> <span class="n">CLASSES</span><span class="p">[</span><span class="n">_label</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">_img</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -14252,7 +14551,7 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Let's see what the first pair of input/output sequences look like.</p>
+<p>Note that each training example is a tuple containing the three dimensional image tensor (C by H by W) and the label.</p>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -14260,16 +14559,12 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">train_loader</span><span class="p">))</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Some individual pixel: "</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">[</span><span class="mi">54</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Corresponding Label: "</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">[</span><span class="mi">54</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
 </div>
-</div>
-</div>
-<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>We now define the LSTM architecture. Since the LSTM layer is already implemented in PyTorch, we can use it directly. The LSTM layer takes the input sequence and returns the output sequence along with the hidden state. The output is then passed through a fully connected layer to get the final predictions.</p>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -14277,22 +14572,12 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">LSTMModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">embedding_dim</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">128</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">LSTMModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">embedding_dim</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lstm</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">LSTM</span><span class="p">(</span><span class="n">embedding_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">hidden</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span><span class="p">,</span> <span class="n">hidden</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">hidden</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">hidden</span>
-
-<span class="n">model</span> <span class="o">=</span> <span class="n">LSTMModel</span><span class="p">(</span><span class="n">vocab_size</span><span class="o">=</span><span class="mi">2400</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-<span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
-<span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">_random_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">))</span>
+<span class="n">_img</span><span class="p">,</span> <span class="n">_label</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="p">[</span><span class="n">_random_index</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Label: "</span><span class="p">,</span> <span class="n">_label</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Class: "</span><span class="p">,</span> <span class="n">CLASSES</span><span class="p">[</span><span class="n">_label</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">_img</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -14301,7 +14586,186 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Finally, we train the model for 15 epochs. The loss should decrease over time, indicating that the model is learning to predict the next word in the sequence. After training, we can generate text by providing a seed phrase and letting the model predict the next words based on the learned patterns.</p>
+<p>PyTorch has a special <em>DataLoader</em> class that takes care of some of the tedious details of constructing batches from the dataset.</p>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Length of the train dataset: "</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Length of list(train_loader): "</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Type of the first element of list(train_loader): "</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Type of the first element of list(train_loader)[0]: "</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Shape of the first element of list(train_loader)[0]: "</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Dataloaders</strong> provide multiple ways to access the data, either by converting it into a <strong>Python list</strong> or by using an <strong>iterable</strong>.</p>
+<p>Using <code>list(train_loader)</code>, as we have, loads the <strong>entire dataset into memory</strong>, which can be <strong>slow</strong> and even <strong>fail</strong> when dealing with large datasets.</p>
+<p>Since <strong>neural network training algorithms process data in batches</strong>, it is more efficient to use an <strong>iterator</strong>. Instead of retrieving the first batch like this:</p>
+<div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+<p>which loads everything into memory, we use:</p>
+<div class="highlight"><pre><span></span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">train_loader</span><span class="p">))</span>
+</pre></div>
+<p>This approach retrieves only the first batch without loading the entire dataset, making it memory-efficient and faster.</p>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Let's load the first batch of our data (image and label) and display it using the <code>matplotlib</code> library.</p>
+<p>Recall that the shape returned by</p>
+<div class="highlight"><pre><span></span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">train_loader</span><span class="p">))</span>
+</pre></div>
+<p>is 32 by 3 by 32 by 32. This shape represents the batch size, number of channels, height, and width of the image, respectively.</p>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">next_batch_images</span><span class="p">,</span> <span class="n">next_batch_labels</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">train_loader</span><span class="p">))</span>
+<span class="n">_first_img</span> <span class="o">=</span> <span class="n">next_batch_images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># retrieve the first image from the batch of 32</span>
+<span class="n">_first_label</span> <span class="o">=</span> <span class="n">next_batch_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># retrieve the first label from the batch of 32</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">_first_img</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="c1"># imshow requires the image to be in height x width x channels format</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Label: "</span><span class="p">,</span> <span class="n">CLASSES</span><span class="p">[</span><span class="n">_first_label</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Why is the first image different from when we used the dataset directly?</p>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Model-Checkpoints">Model Checkpoints<a class="anchor-link" href="#Model-Checkpoints">¶</a></h3><p><strong>Checkpoints</strong> are snapshots of the model's state (e.g. model weights) during training that allow you to:</p>
+<ul>
+<li>Resume training from any point if interrupted</li>
+<li>Compare performance across different epochs</li>
+<li>Save the best performing model automatically</li>
+<li>Experiment with different training strategies</li>
+</ul>
+<h4 id="What-Gets-Saved-in-a-Checkpoint?">What Gets Saved in a Checkpoint?<a class="anchor-link" href="#What-Gets-Saved-in-a-Checkpoint?">¶</a></h4><p>In particular, in this example, the checkpoint will contain:</p>
+<ul>
+<li><strong>Model weights</strong> (<code>model.state_dict()</code>) - The learned parameters</li>
+<li><strong>Optimizer state</strong> (<code>optimizer.state_dict()</code>) - Learning rates, momentum, etc.</li>
+<li><strong>Epoch number</strong> - Which training epoch this represents</li>
+<li><strong>Loss and accuracy</strong> - Performance metrics at this point</li>
+</ul>
+<h4 id="Why-Save-Optimizer-State?">Why Save Optimizer State?<a class="anchor-link" href="#Why-Save-Optimizer-State?">¶</a></h4><p>The optimizer state is crucial because modern optimizers like <strong>Adam</strong> maintain:</p>
+<ul>
+<li><strong>Adaptive learning rates</strong> per parameter</li>
+<li><strong>Momentum</strong> from previous gradient updates</li>
+<li><strong>Internal counters</strong> for learning rate scheduling</li>
+</ul>
+<p>Without saving optimizer state, resuming training would:</p>
+<ul>
+<li>Reset learning rates to initial values</li>
+<li>Lose accumulated momentum</li>
+<li>Potentially cause training instability or slower convergence</li>
+</ul>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="k">def</span> <span class="nf">save_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">,</span> <span class="n">checkpoint_dir</span><span class="o">=</span><span class="s1">'checkpoints_fcnn'</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Save model checkpoint"""</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">checkpoint_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">checkpoint</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">'epoch'</span><span class="p">:</span> <span class="n">epoch</span><span class="p">,</span>
+        <span class="s1">'model_state_dict'</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+        <span class="s1">'optimizer_state_dict'</span><span class="p">:</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+        <span class="s1">'loss'</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
+        <span class="s1">'accuracy'</span><span class="p">:</span> <span class="n">accuracy</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Save latest checkpoint</span>
+    <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">checkpoint_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'fcnn_epoch_</span><span class="si">{</span><span class="n">epoch</span><span class="si">:</span><span class="s1">03d</span><span class="si">}</span><span class="s1">.pth'</span><span class="p">)</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">checkpoint_path</span>
+
+<span class="k">def</span> <span class="nf">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Load model checkpoint"""</span>
+    <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s1">'model_state_dict'</span><span class="p">])</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s1">'optimizer_state_dict'</span><span class="p">])</span>
+
+    <span class="n">epoch</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">'epoch'</span><span class="p">]</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">'loss'</span><span class="p">]</span>
+    <span class="n">accuracy</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">'accuracy'</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Loaded checkpoint from epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Loss: </span><span class="si">{</span><span class="n">loss</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, Accuracy: </span><span class="si">{</span><span class="n">accuracy</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">accuracy</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Training-the-model">Training the model<a class="anchor-link" href="#Training-the-model">¶</a></h3>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">altair</span> <span class="k">as</span> <span class="nn">alt</span>
+<span class="kn">from</span> <span class="nn">mofresh</span> <span class="kn">import</span> <span class="n">refresh_matplotlib</span><span class="p">,</span> <span class="n">ImageRefreshWidget</span>
+<span class="kn">import</span> <span class="nn">polars</span> <span class="k">as</span> <span class="nn">pl</span>
+
+<span class="n">widget</span> <span class="o">=</span> <span class="n">ImageRefreshWidget</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+
+<span class="nd">@refresh_matplotlib</span>
+<span class="k">def</span> <span class="nf">losschart</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"epoch"</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s2">"train_loss"</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">"Loss"</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Epoch"</span><span class="p">)</span>
+
+<span class="n">widget</span>
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -14311,32 +14775,78 @@ a.anchor-link {
 <div class="CodeMirror cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
-<span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="n">datalogs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">best_accuracy</span> <span class="o">=</span> <span class="mf">0.0</span>
 
-<span class="c1"># Training loop</span>
+<span class="c1"># Train the model</span>
+<span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">)</span>
+
+<span class="c1"># To load from a checkpoint, uncomment the line below:</span>
+<span class="c1"># start_epoch, _, _ = load_checkpoint(model, optimizer, 'checkpoints_fcnn/fcnn_epoch_005.pth', device)</span>
+
 <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">EPOCHS</span><span class="p">):</span>
-    <span class="n">total_loss</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">train_loader_with_progress</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span>
-        <span class="n">iterable</span><span class="o">=</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">EPOCHS</span><span class="si">}</span><span class="s2">"</span>
-    <span class="p">)</span>
-    <span class="k">for</span> <span class="n">batch_number</span><span class="p">,</span> <span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">train_loader_with_progress</span><span class="p">):</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-        <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-        <span class="n">outputs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">outputs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">targets</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">running_loss</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">running_correct</span><span class="p">,</span> <span class="n">running_total</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 
+    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+    <span class="n">train_loader_with_progress</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">iterable</span><span class="o">=</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s1">'Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">EPOCHS</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">batch_number</span><span class="p">,</span> <span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">train_loader_with_progress</span><span class="p">):</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">predicted</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># predicted = torch.argmax(outputs.data)</span>
+
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
         <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
         <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 
-        <span class="n">total_loss</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="c1"># log data for tracking</span>
+        <span class="n">running_correct</span> <span class="o">+=</span> <span class="p">(</span><span class="n">predicted</span> <span class="o">==</span> <span class="n">labels</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">running_total</span> <span class="o">+=</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">running_loss</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>  
 
-        <span class="k">if</span> <span class="p">(</span><span class="n">batch_number</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">batch_number</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="n">train_loader_with_progress</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="s2">"avg loss"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">total_loss</span><span class="o">/</span><span class="p">(</span><span class="n">batch_number</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-                <span class="p">}</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">batch_number</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">99</span><span class="p">):</span>
+            <span class="n">train_loader_with_progress</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">({</span><span class="s1">'avg accuracy'</span><span class="p">:</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">running_correct</span><span class="o">/</span><span class="n">running_total</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'avg loss'</span><span class="p">:</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">running_loss</span><span class="o">/</span><span class="p">(</span><span class="n">batch_number</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">})</span>
+
+            <span class="n">datalogs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"epoch"</span><span class="p">:</span> <span class="n">epoch</span> <span class="o">+</span> <span class="n">batch_number</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="p">),</span> 
+                <span class="s2">"train_loss"</span><span class="p">:</span> <span class="n">running_loss</span> <span class="o">/</span> <span class="p">(</span><span class="n">batch_number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="s2">"train_accuracy"</span><span class="p">:</span> <span class="n">running_correct</span><span class="o">/</span><span class="n">running_total</span><span class="p">,</span>
+            <span class="p">})</span>
+
+    <span class="c1"># Calculate epoch metrics</span>
+    <span class="n">epoch_loss</span> <span class="o">=</span> <span class="n">running_loss</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
+    <span class="n">epoch_accuracy</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">running_correct</span> <span class="o">/</span> <span class="n">running_total</span>
+
+    <span class="n">datalogs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+        <span class="s2">"epoch"</span><span class="p">:</span> <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> 
+        <span class="s2">"train_loss"</span><span class="p">:</span> <span class="n">epoch_loss</span><span class="p">,</span>
+        <span class="s2">"train_accuracy"</span><span class="p">:</span> <span class="n">running_correct</span><span class="o">/</span><span class="n">running_total</span><span class="p">,</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Save checkpoint every epoch</span>
+    <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">save_checkpoint</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">epoch_loss</span><span class="p">,</span> <span class="n">epoch_accuracy</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Save best model</span>
+    <span class="k">if</span> <span class="n">epoch_accuracy</span> <span class="o">&gt;</span> <span class="n">best_accuracy</span><span class="p">:</span>
+        <span class="n">best_accuracy</span> <span class="o">=</span> <span class="n">epoch_accuracy</span>
+        <span class="n">best_path</span> <span class="o">=</span> <span class="n">save_checkpoint</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">epoch_loss</span><span class="p">,</span> <span class="n">epoch_accuracy</span><span class="p">,</span> 
+            <span class="n">checkpoint_dir</span><span class="o">=</span><span class="s1">'checkpoints_fcnn/best'</span>
+        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"New best model saved! Accuracy: </span><span class="si">{</span><span class="n">epoch_accuracy</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: Loss=</span><span class="si">{</span><span class="n">epoch_loss</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, Accuracy=</span><span class="si">{</span><span class="n">epoch_accuracy</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Checkpoint saved: </span><span class="si">{</span><span class="n">checkpoint_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">widget</span><span class="o">.</span><span class="n">src</span> <span class="o">=</span> <span class="n">losschart</span><span class="p">(</span><span class="n">datalogs</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Finished Training"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -14348,26 +14858,21 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">generate_text</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">seed_text</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-    <span class="n">words</span> <span class="o">=</span> <span class="n">seed_text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-    <span class="n">input_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">vocab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">vocab</span><span class="p">[</span><span class="s2">"&lt;UNK&gt;"</span><span class="p">])</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">]</span>
-    <span class="n">input_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-    <span class="n">hidden</span> <span class="o">=</span> <span class="kc">None</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Evaluation</span>
+<span class="n">test_correct</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">test_total</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">test_images</span><span class="p">,</span> <span class="n">test_labels</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+        <span class="n">test_images</span> <span class="o">=</span> <span class="n">test_images</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">test_labels</span> <span class="o">=</span> <span class="n">test_labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">test_outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">test_images</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">test_predicted</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">test_outputs</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">test_total</span> <span class="o">+=</span> <span class="n">test_labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">test_correct</span> <span class="o">+=</span> <span class="p">(</span><span class="n">test_predicted</span> <span class="o">==</span> <span class="n">test_labels</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 
-    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
-            <span class="n">output</span><span class="p">,</span> <span class="n">hidden</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">,</span> <span class="n">hidden</span><span class="p">)</span>
-            <span class="n">logits</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">temperature</span>
-            <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">next_id</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="n">probs</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-            <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inv_vocab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">next_id</span><span class="p">,</span> <span class="s2">"&lt;UNK&gt;"</span><span class="p">))</span>
-
-            <span class="c1"># Extend input sequence with new token</span>
-            <span class="n">input_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_id</span><span class="p">)</span>
-            <span class="n">input_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+<span class="n">test_accuracy</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">test_correct</span> <span class="o">/</span> <span class="n">test_total</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Accuracy of the network on the 10000 test images: </span><span class="si">{</span><span class="n">test_accuracy</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -14379,10 +14884,143 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">seed</span> <span class="o">=</span> <span class="s2">"the sailboat"</span>
-<span class="n">vocab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Generated Text:</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">generate_text</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="sa">fr</span><span class="s2">"""</span>
+<span class="s2">The model has an **accuracy of </span><span class="si">{</span><span class="n">test_accuracy</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%** on the test set, which is **better than random guessing** (10 classes).  </span>
+
+<span class="s2">However, this accuracy is **low** compared to **state-of-the-art models**.  </span>
+
+<span class="s2">The **simple model** we built has **limited capacity** to learn the **complex patterns** in the CIFAR-10 dataset.  </span>
+
+<span class="s2">Next, we will build a **more advanced model** using convolutional neural network (CNN) to **improve accuracy** and **learn more complex patterns** in the data.</span>
+<span class="s2">"""</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>We end with seeing how the trained model classified 10 random images from a test batch.</p>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">_images</span><span class="p">,</span> <span class="n">_labels</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">test_loader</span><span class="p">))</span>
+<span class="n">_images</span> <span class="o">=</span> <span class="n">_images</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">_labels</span> <span class="o">=</span> <span class="n">_labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">_outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">_images</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">_outputs</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">preds_single</span> <span class="o">=</span> <span class="n">CLASSES</span><span class="p">[</span><span class="n">preds</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()]</span>
+<span class="n">actual_single</span> <span class="o">=</span> <span class="n">CLASSES</span><span class="p">[</span><span class="n">_labels</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()]</span>
+<span class="n">n_to_show</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_images</span><span class="p">)),</span> <span class="n">n_to_show</span><span class="p">)</span>
+
+<span class="n">_fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">_fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">_i</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">_images</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">_fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_to_show</span><span class="p">,</span> <span class="n">_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">"off"</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="mf">0.5</span><span class="p">,</span>
+        <span class="o">-</span><span class="mf">0.35</span><span class="p">,</span>
+        <span class="s2">"pred = "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">preds_single</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="mf">0.5</span><span class="p">,</span>
+        <span class="o">-</span><span class="mf">0.7</span><span class="p">,</span>
+        <span class="s2">"act = "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">actual_single</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Loading-Checkpoints">Loading Checkpoints<a class="anchor-link" href="#Loading-Checkpoints">¶</a></h3><p>The <code>load_checkpoint()</code> function restores both the model and optimizer to their exact state from a saved checkpoint.</p>
+<h4 id="Function-Usage:">Function Usage:<a class="anchor-link" href="#Function-Usage:">¶</a></h4><div class="highlight"><pre><span></span><span class="n">epoch</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">accuracy</span> <span class="o">=</span> <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+</pre></div>
+<h4 id="Parameters:">Parameters:<a class="anchor-link" href="#Parameters:">¶</a></h4><ul>
+<li><strong><code>model</code></strong>: The neural network to load weights into</li>
+<li><strong><code>optimizer</code></strong>: The optimizer to restore state for</li>
+<li><strong><code>checkpoint_path</code></strong>: Path to the saved checkpoint file</li>
+<li><strong><code>device</code></strong>: Device to load the checkpoint on ('cpu', 'cuda', 'mps')</li>
+</ul>
+<h4 id="Returns:">Returns:<a class="anchor-link" href="#Returns:">¶</a></h4><ul>
+<li><strong><code>epoch</code></strong>: The epoch number when this checkpoint was saved</li>
+<li><strong><code>loss</code></strong>: The training loss at that epoch</li>
+<li><strong><code>accuracy</code></strong>: The training accuracy at that epoch</li>
+</ul>
+<h4 id="Common-Use-Cases:">Common Use Cases:<a class="anchor-link" href="#Common-Use-Cases:">¶</a></h4><p><strong>1. Resume Training After Interruption:</strong></p>
+<div class="highlight"><pre><span></span><span class="c1"># Load latest checkpoint and continue from where you left off</span>
+<span class="n">epoch</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="s1">'checkpoints_fcnn/fcnn_epoch_025.pth'</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+
+<span class="c1"># Continue training from epoch + 1</span>
+<span class="k">for</span> <span class="n">new_epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">EPOCHS</span><span class="p">):</span>
+    <span class="c1"># training code...</span>
+</pre></div>
+<p><strong>2. Load Best Model for Inference:</strong></p>
+<div class="highlight"><pre><span></span><span class="c1"># Load the best performing model (no need for optimizer state in inference)</span>
+<span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="s1">'checkpoints_fcnn/best/fcnn_epoch_015.pth'</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>  <span class="c1"># Set to evaluation mode</span>
+<span class="c1"># Use model for predictions...</span>
+</pre></div>
+<p><strong>3. Compare Different Epochs:</strong></p>
+<div class="highlight"><pre><span></span><span class="c1"># Test epoch 5 performance</span>
+<span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="s1">'checkpoints_fcnn/fcnn_epoch_005.pth'</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+<span class="n">test_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># Test epoch 10 performance</span>
+<span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="s1">'checkpoints_fcnn/fcnn_epoch_010.pth'</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+<span class="n">test_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+<h4 id="Important-Notes:">Important Notes:<a class="anchor-link" href="#Important-Notes:">¶</a></h4><ul>
+<li>The model architecture must match the saved checkpoint</li>
+<li>Device mapping handles loading checkpoints across different devices</li>
+<li>For inference only, you can pass a dummy optimizer (but it's still required)</li>
+</ul>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Example: Load a specific checkpoint and test it</span>
+<span class="c1"># Uncomment the lines below to load and test a checkpoint</span>
+
+<span class="c1"># # Create a fresh optimizer for loading</span>
+<span class="c1"># _test_optimizer = optim.Adam(model.parameters(), lr=0.0005)</span>
+<span class="c1"># _epoch, _loss, _accuracy = load_checkpoint(model, _test_optimizer, 'checkpoints_fcnn/fcnn_epoch_005.pth', device)</span>
+
+<span class="c1"># # Test the loaded model</span>
+<span class="c1"># model.eval()</span>
+<span class="c1"># _test_images, _test_labels = next(iter(test_loader))</span>
+<span class="c1"># _test_images = _test_images.to(device)</span>
+<span class="c1"># _test_labels = _test_labels.to(device)</span>
+<span class="c1"># _test_outputs = model(_test_images)</span>
+<span class="c1"># _, _test_preds = torch.max(_test_outputs, 1)</span>
+
+<span class="c1"># print(f"Loaded model from epoch {_epoch}")</span>
+<span class="c1"># print(f"Sample predictions: {CLASSES[_test_preds[:5].cpu().numpy()]}")</span>
+<span class="c1"># print(f"Actual labels: {CLASSES[_test_labels[:5].cpu().numpy()]}")</span>
 </pre></div>
 </div>
 </div>

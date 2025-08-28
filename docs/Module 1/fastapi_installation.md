@@ -23,21 +23,15 @@ cd sps_genai
 ### 3. Install FastAPI
 Use UV to install FastAPI as a dependency:
 ```bash
-uv install fastapi
+uv add fastapi --extra standard
 ```
 
-### 4. Install ASGI Server (Optional but Recommended)
-To run your FastAPI application, you need an ASGI server. Uvicorn is a popular choice:
-```bash
-uv install uvicorn
-```
-
-### 5. Verify Installation
+### 4. Verify Installation
 Ensure that FastAPI and Uvicorn are installed successfully:
 ```bash
-uv list
+uv tree
 ```
-This command will display a list of installed dependencies, including FastAPI and Uvicorn.
+This command will display a list of installed dependencies, including FastAPI.
 
 ---
 
@@ -57,7 +51,7 @@ def read_root():
 
 2. Run the application using Uvicorn:
 ```bash
-uvicorn main:app --reload
+uv run fastapi dev
 ```
 
 3. Open your browser and navigate to `http://127.0.0.1:8000` to see your API in action.
@@ -74,14 +68,10 @@ FastAPI automatically generates interactive API documentation. After running you
 ### 2. Adding More Dependencies
 To add additional dependencies (e.g., `Jupyter` or `Pydantic`):
 ```bash
-uv install jupyter pydantic
+uv add jupyter pydantic
 ```
 
 ### 3. Managing Your Project
 `uv` helps manage your virtual environment and dependencies efficiently:
 - To remove a package: `uv remove package-name`
-- To update all dependencies: `uv update`
-
----
-
-FastAPI with `uv` simplifies the development and management of high-performance APIs. Get started today to leverage the full power of these tools!
+- To sync the project's dependencies with the environment: `uv sync`

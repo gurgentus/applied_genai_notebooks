@@ -98,6 +98,7 @@ aws cloudwatch put-metric-alarm \
   --namespace AWS/Billing \
   --statistic Maximum \
   --period 86400 \
+  --evaluation-periods 5 \
   --threshold 10 \
   --comparison-operator GreaterThanThreshold
 ```

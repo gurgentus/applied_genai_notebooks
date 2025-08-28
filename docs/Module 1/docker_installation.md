@@ -70,7 +70,6 @@ This will download a test image and run it in a container. If successful, you’
 ### Test Docker Compose
 To test Docker Compose, create a `docker-compose.yml` file with the following content:
 ```yaml
-version: '3.8'
 services:
   hello-world:
     image: hello-world
