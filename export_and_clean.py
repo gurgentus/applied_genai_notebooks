@@ -334,9 +334,13 @@ horizontal_filter = torch.tensor([[-1, -1], [1, 1]], dtype=torch.float32).unsque
     with open(notebook_path, 'w') as f:
         json.dump(notebook, f, indent=1)
 
-def export_and_clean_notebooks():
+def export_and_clean_notebooks(specific_files=None):
     """
     Export all marimo notebooks and clean up interactive code
+    
+    Args:
+        specific_files: List of specific notebook files to process. 
+                       If None, processes all notebooks in the directory.
     """
     notebooks_dir = Path('notebooks')
     jupyter_dir = Path('jupyter_notebooks')
@@ -348,7 +352,15 @@ def export_and_clean_notebooks():
     
     print("Exporting and cleaning notebooks...")
     
-    for notebook_path in notebooks_dir.glob('*.py'):
+    # Determine which files to process
+    if specific_files:
+        notebook_paths = [Path(f) for f in specific_files if f.endswith('.py') and f.startswith('notebooks/')]
+        print(f"Processing {len(notebook_paths)} changed notebooks...")
+    else:
+        notebook_paths = list(notebooks_dir.glob('*.py'))
+        print(f"Processing all {len(notebook_paths)} notebooks...")
+    
+    for notebook_path in notebook_paths:
         print(f"Processing {notebook_path.name}...")
         
         try:
@@ -356,7 +368,7 @@ def export_and_clean_notebooks():
             jupyter_output = jupyter_dir / f"{notebook_path.stem}.ipynb"
             jupyter_result = subprocess.run([
                 'marimo', 'export', 'ipynb', str(notebook_path),
-                '-o', str(jupyter_output), '-f'
+                '-o', str(jupyter_output)
             ], capture_output=True, text=True)
             
             if jupyter_result.returncode != 0:
@@ -393,4 +405,11 @@ def export_and_clean_notebooks():
     print("- Preserved all educational content and code examples")
 
 if __name__ == '__main__':
-    export_and_clean_notebooks()
+    import sys
+    
+    # If command line arguments are provided, treat them as specific files to process
+    if len(sys.argv) > 1:
+        specific_files = sys.argv[1:]
+        export_and_clean_notebooks(specific_files)
+    else:
+        export_and_clean_notebooks()
