@@ -34,4 +34,4 @@ def generate_with_stable_diffusion(request: ImageGenerationRequest):
 
 ## 3. Test the image generation functionality
 
-Rebuild the docker file and test to make sure that the /generate_with_stable_diffusion api endpoint works correctly.
+Test the application using `uv run fastapi dev app/main.py` to make sure that the /generate_with_stable_diffusion api endpoint works correctly. Optionally, rebuild the Docker image if you're using containerization.

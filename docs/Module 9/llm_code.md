@@ -4,7 +4,7 @@ As part of this activity you will update the text generation API developed in Mo
 
 Since training an LLM model from scratch is a long and resource intensive process you will use the excellent Transformer library from HuggingFace (https://huggingface.co/docs/transformers/en/index) to load the pre-trained model.
 
-You will incorporate appropriate code from Module9-GPT notebook into your FastAPI docker implementation. This involves updating several key steps. 
+You will incorporate appropriate code from Module9-GPT notebook into your FastAPI implementation. This involves updating several key steps. 
 
 ---
 
@@ -48,4 +48,4 @@ def generate_with_llm(request: TextGenerationRequest):
 
 ## 5. Test the text generation functionality
 
-Rebuild the docker file from Modules 3 and 7 and test to make sure that the /generate_with_llm api endpoint works correctly.
+Test the application using `uv run fastapi dev app/main.py` to make sure that the /generate_with_llm api endpoint works correctly. Optionally, rebuild the Docker image if you're using containerization.

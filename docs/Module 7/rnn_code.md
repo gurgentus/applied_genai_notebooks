@@ -1,6 +1,6 @@
 # RNN Class Activity
 
-As part of this activity we will update the text generation API developed in Module 3 to use an RNN. You will encorporate appropriate code from Module6-RNN notebook into your FastAPI docker implementation. 
+As part of this activity we will update the text generation API developed in Module 3 to use an RNN. You will incorporate appropriate code from Module6-RNN notebook into your FastAPI implementation. 
 
 ---
 
@@ -30,7 +30,7 @@ def generate_with_rnn(request: TextGenerationRequest):
 
 ## 2. Test the Text Generation functionality
 
-Rebuild the docker file from Module 3 and test to make sure that the /generate_with_rnn api endpoint works correctly.
+Test the application using `uv run fastapi dev app/main.py` to make sure that the /generate_with_rnn api endpoint works correctly. Optionally, rebuild the Docker image if you're using containerization.
 
 ---
 

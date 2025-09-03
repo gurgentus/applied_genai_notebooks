@@ -1,6 +1,6 @@
-# Class Activity: Setting Up a Simple Text Generation FastAPI Project Using Docker
+# Class Activity: Setting Up a Simple Text Generation FastAPI Project
 
-This guide will help you set up a FastAPI project using Docker and UV Package Manager.
+This guide will help you set up a FastAPI project using UV Package Manager. Docker is optional for containerization and deployment.
 
 ---
 
@@ -8,9 +8,9 @@ This guide will help you set up a FastAPI project using Docker and UV Package Ma
 
 Before getting started, ensure you have the following installed:
 
-- **Docker**: Install from [here](../Module 1/docker_installation.md)
 - **Python 3.7+**
-- **UV Package Manager**: If you haven’t installed UV, follow the installation instructions [here](../Module 1/uv_installation.md).
+- **UV Package Manager**: If you haven't installed UV, follow the installation instructions [here](../Module 1/uv_installation.md)
+- **Docker (Optional)**: Only needed for containerization. Install from [here](../Module 1/docker_installation.md)
 
 ---
 
@@ -130,9 +130,18 @@ Ensure that the dependencies are properly synchronized:
 uv sync
 ```
 
-### 6. Build the Docker Image
+### 6. Run the Application
 
-Finally, build the Docker image for the application:
+You can run the application directly with UV:
+```bash
+uv run fastapi dev app/main.py
+```
+
+Access your FastAPI application at: `http://127.0.0.1:8000`
+
+### 7. Build the Docker Image (Optional)
+
+If you want to containerize your application, build the Docker image:
 ```bash
 docker build -t sps-genai .
 ```
@@ -141,6 +150,4 @@ After the build completes, you can run the container using:
 ```bash
 docker run -p 8000:8000 sps-genai
 ```
-
-Access your FastAPI application at: `http://127.0.0.1:8000`
 

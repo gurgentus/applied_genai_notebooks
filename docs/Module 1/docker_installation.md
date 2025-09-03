@@ -1,4 +1,8 @@
+# Docker Installation (Optional)
+
 Docker is a platform that allows developers to build, share, and run applications in isolated environments called **containers**. Containers make it easy to package applications with all their dependencies, ensuring they run reliably across different systems.
+
+> **Note:** Docker is optional for this course. All notebooks can be run directly with Python and the required dependencies. Docker is only needed if you want to containerize your applications for deployment.
 
 ## Why Use Docker?
 - **Portability:** Run your application anywhere without compatibility issues.
