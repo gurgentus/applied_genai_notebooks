@@ -363,7 +363,7 @@ def _(
 def _(mo):
     mo.md(
         r"""
-    ## Example 3: Bayes Theorem
+    ## Example 3: Bayes Theorem (Optional)
 
     To get comfortable with handling probability expressions, we will play a treasure hunt game on a 5x5 grid.
     The rules are simple:
