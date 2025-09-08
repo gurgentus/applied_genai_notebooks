@@ -78,12 +78,41 @@ def generate_text(request: TextGenerationRequest):
     return {"generated_text": generated_text}
 ```
 
-### 4. Create a Dockerfile
+### 4. Install Required Dependencies
 
-Navigate back to the root project directory:
+Navigate back to the root project directory (if you're still in the `app` directory):
 ```bash
 cd ..
 ```
+
+Install the necessary libraries for your FastAPI application:
+```bash
+uv add ...
+```
+
+### 5. Sync Dependencies
+
+Ensure that the dependencies are properly synchronized:
+```bash
+uv sync
+```
+
+### 6. Run the Application
+
+You can run the application directly with UV:
+```bash
+uv run fastapi dev app/main.py
+```
+
+Access your FastAPI application at: `http://127.0.0.1:8000`
+
+---
+
+## Optional: Docker Deployment
+
+If you want to containerize your application for deployment, you can use Docker.
+
+### 7. Create a Dockerfile
 
 Create a `Dockerfile` for containerizing the application:
 ```bash
@@ -123,31 +152,15 @@ COPY ./app /code/app
 CMD ["uv", "run", "fastapi", "run", "app/main.py", "--port", "80"]
 ```
 
-### 5. Sync Dependencies
+### 8. Build and Run the Docker Image
 
-Ensure that the dependencies are properly synchronized:
-```bash
-uv sync
-```
-
-### 6. Run the Application
-
-You can run the application directly with UV:
-```bash
-uv run fastapi dev app/main.py
-```
-
-Access your FastAPI application at: `http://127.0.0.1:8000`
-
-### 7. Build the Docker Image (Optional)
-
-If you want to containerize your application, build the Docker image:
+Build the Docker image:
 ```bash
 docker build -t sps-genai .
 ```
 
 After the build completes, you can run the container using:
 ```bash
-docker run -p 8000:8000 sps-genai
+docker run -p 8000:80 sps-genai
 ```
 
