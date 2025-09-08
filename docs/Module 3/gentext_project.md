@@ -164,3 +164,9 @@ After the build completes, you can run the container using:
 docker run -p 8000:80 sps-genai
 ```
 
+Access your containerized FastAPI application at: `http://127.0.0.1:8000`
+
+View the interactive API documentation at: `http://127.0.0.1:8000/docs`
+
+Note: Although the container runs on port 80 internally, the port mapping (`-p 8000:80`) makes it accessible on port 8000 from your host machine, keeping the same access URL as the development server.
+
