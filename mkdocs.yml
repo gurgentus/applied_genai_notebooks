@@ -1,13 +1,57 @@
-site_name: Applied Generative AI
+site_name: Applied Generative AI - Course Companion
+site_description: Lecture notes for Applied Generative AI course I developed and taught at Columbia University
+site_author: Greg Hayrapetyan
+site_url: https://gurgentus.github.io/applied_genai_notebooks/
+
+repo_name: gurgentus/applied_genai_notebooks
+repo_url: https://github.com/gurgentus/applied_genai_notebooks
+
+theme:
+  name: material
+  logo: images/columbia-logo.png
+  favicon: images/columbia-logo.png
+  palette:
+    # Light mode - clean, academic look similar to jekyll-theme-dinky
+    - scheme: default
+      primary: white
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode option
+    - scheme: slate
+      primary: blue grey
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tracking
+    # - navigation.tabs
+    # - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+  font:
+    text: Roboto
+    code: Roboto Mono
 
 nav:
-  - Home: index.md
-  - Module 1:
+  - Overview: index.md
+  - Module 1 Class Activity:
+    #   - Module Overview: Module 1/overview.md
       - UV Package Manager Installation: Module 1/uv_installation.md
       - FastAPI Installation: Module 1/fastapi_installation.md
       - Docker Installation (Optional): Module 1/docker_installation.md
       - Git Setup: Module 1/git_setup.md
       - AWS Setup (Optional): Module 1/aws_cli_installation.md
+  - Module 2 Practical:
+      - Practical 1 - Probability: Module 2/practical_1_probability.md
+      - Practical 2 - Word Sampling: Module 2/practical_2_word_sampling.md
+      - Practical 3 - Word Embeddings: Module 2/practical_3_word_embeddings.md
   - Module 3:
       - First Project Setup: Module 3/gentext_project.md
   - Module 4:
@@ -25,17 +69,18 @@ nav:
   - Module 13:
       - Deploy a Stable Diffusion model to the API: Module 13/stable_diffusion.md
 
-site_url: https://mydomain.org/mysite
-theme:
-  name: material
+extra_css:
+  - stylesheets/custom.css
 markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
-plugins:
-    - pdf-export:
-        combined: true
+# plugins:
+#     - pdf-export:
+#         combined: true

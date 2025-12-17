@@ -1,5 +1,10 @@
 # GAN Class Activity
 
+!!! note "Related Marimo Notebook"
+    This module builds upon concepts from the following interactive notebook:
+
+    - [Module 6 Practical 1: Generative Adversarial Networks (GAN)](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_6_Practical_1_GAN.py)
+
 As part of this activity we will add the gan model to the helper library we developed as part of Module 4.
 
 You will encorporate appropriate code from Module6-GAN notebook into your helper_lib module. 

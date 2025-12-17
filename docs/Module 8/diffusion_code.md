@@ -1,5 +1,12 @@
 # Diffusion Model Class Activity
 
+!!! note "Related Marimo Notebooks"
+    This module builds upon concepts from the following interactive notebooks:
+
+    - [Module 8 Practical 1: Energy-Based Methods](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_8_Practical_1_EnergyBasedMethods.py)
+    - [Module 8 Practical 2: Diffusion Methods](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_8_Practical_2_DiffusionMethods.py)
+    - [Module 8 Practical: Diffusion Methods (Alternative)](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_8_Practical_DiffusionMethods.py)
+
 As part of this activity we will add the diffusion model to the helper library we developed as part of Module 4.
 
 You will encorporate appropriate code from Module8-DiffusionMethods notebook into your helper_lib module. 

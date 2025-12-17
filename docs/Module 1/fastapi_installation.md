@@ -73,5 +73,6 @@ uv add jupyter pydantic
 
 ### 3. Managing Your Project
 `uv` helps manage your virtual environment and dependencies efficiently:
+
 - To remove a package: `uv remove package-name`
 - To sync the project's dependencies with the environment: `uv sync`

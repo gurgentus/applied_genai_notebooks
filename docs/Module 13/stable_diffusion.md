@@ -1,5 +1,10 @@
 # Deploying Stable Diffusion Activity
 
+!!! note "Related Marimo Notebook"
+    This module has the following interactive notebook:
+
+    - [Module 13 Practical: Music Transformer](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_Module_13_Practical_Music_Transformer.py)
+
 As part of this activity you will deploy a Stable Diffusion model from HuggingFace. 
 
 ---

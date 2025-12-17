@@ -1,5 +1,12 @@
 # Helper Library Setup Guide for Neural Network Projects
 
+!!! note "Related Marimo Notebooks"
+    This module builds upon concepts from the following interactive notebooks:
+
+    - [Module 4 Practical 1: Fully Connected Neural Networks (FCNN)](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_4_Practical_1_FCNN.py)
+    - [Module 4 Practical 2: Convolutions](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_4_Practical_2_Convolutions.py)
+    - [Module 4 Practical 3: Convolutional Neural Networks (CNN)](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_4_Practical_3_CNN.py)
+
 As part of this activity we will create a helper library that encapsulates common functionalities for data loading, model training, and evaluation, reducing duplication across various neural network projects we will work on this semester. 
 
 You will move appropriate code from Module4-FCNN and Module4-CNN notebooks to the newly created module.

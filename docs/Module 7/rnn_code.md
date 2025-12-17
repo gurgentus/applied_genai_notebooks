@@ -1,5 +1,10 @@
 # RNN Class Activity
 
+!!! note "Related Marimo Notebook"
+    This module builds upon concepts from the following interactive notebook:
+
+    - [Module 6 Practical 2: Recurrent Neural Networks (RNN)](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_6_Practical_2_RNN.py)
+
 As part of this activity we will update the text generation API developed in Module 3 to use an RNN. You will incorporate appropriate code from Module6-RNN notebook into your FastAPI implementation. 
 
 ---

@@ -1,0 +1,3 @@
+# Introduction
+
+This module introduces us to Generative Artificial Intelligence. This includes common modalities, such as Text and Image generation, as well as more advanced applications.  The module serves as a high-level overview of different uses of Generative AI across various domains and industries, highlighting its emerging importance in the workplace.  Finally, the module will include course details and assessment walkthrough, as well as a basic coding environment setup that will be used throughout the semester.

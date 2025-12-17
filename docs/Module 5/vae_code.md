@@ -1,5 +1,10 @@
 # Variational Autoencoder
 
+!!! note "Related Marimo Notebook"
+    This module builds upon concepts from the following interactive notebook:
+
+    - [Module 5 Practical: Variational Autoencoder (VAE)](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_5_Practical_VAE.py)
+
 As part of this activity we will add the variational autoencoder to the helper library we developed as part of Module 4.
 
 You will encorporate appropriate code from Module5-VAE notebook into your helper_lib module. 
