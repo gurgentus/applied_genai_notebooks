@@ -22,7 +22,32 @@
 
 /* Content spacing */
 .md-content {
-  max-width: 1000px;
+  max-width: 1400px;
+}
+
+/* Wider content for pages with embedded notebooks */
+.md-content:has(iframe) {
+  max-width: none !important;
+}
+
+.md-content__inner:has(iframe) {
+  max-width: none !important;
+}
+
+/* Override Material theme container widths for iframe pages */
+.md-grid:has(iframe) {
+  max-width: none !important;
+}
+
+.md-main__inner:has(iframe) {
+  max-width: none !important;
+}
+
+/* Full-width iframes for marimo notebooks */
+iframe {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
 }
 
 /* Code blocks with better contrast */
@@ -149,4 +174,74 @@ img {
   border: 1px solid #ddd;
   border-radius: 0 4px 4px 4px;
   background-color: var(--md-code-bg-color);
+}
+
+/* Navigation styling - Different colors for Practicals vs Class Activities */
+
+/* Simple, direct approach - style links by href content */
+
+/* Orange for all practical pages */
+.md-nav__link[href*="practical_"] {
+  border-left: 4px solid #ff8c00 !important;
+  padding-left: 10px !important;
+}
+
+.md-nav__link[href*="practical_"]:hover {
+  background-color: rgba(255, 140, 0, 0.15) !important;
+}
+
+.md-nav__link[href*="practical_"].md-nav__link--active {
+  color: #ff8c00 !important;
+  background-color: rgba(255, 140, 0, 0.1) !important;
+}
+
+/* Blue for class activity pages */
+.md-nav__link[href*="uv_installation"],
+.md-nav__link[href*="fastapi_installation"],
+.md-nav__link[href*="docker_installation"],
+.md-nav__link[href*="git_setup"],
+.md-nav__link[href*="aws_cli"],
+.md-nav__link[href*="gentext"],
+.md-nav__link[href*="nn_code"],
+.md-nav__link[href*="vae_code"],
+.md-nav__link[href*="gan_code"],
+.md-nav__link[href*="rnn_code"],
+.md-nav__link[href*="diffusion_code"],
+.md-nav__link[href*="llm_code"],
+.md-nav__link[href*="stable_diffusion"] {
+  border-left: 4px solid #2196F3 !important;
+  padding-left: 10px !important;
+}
+
+.md-nav__link[href*="uv_installation"]:hover,
+.md-nav__link[href*="fastapi_installation"]:hover,
+.md-nav__link[href*="docker_installation"]:hover,
+.md-nav__link[href*="git_setup"]:hover,
+.md-nav__link[href*="aws_cli"]:hover,
+.md-nav__link[href*="gentext"]:hover,
+.md-nav__link[href*="nn_code"]:hover,
+.md-nav__link[href*="vae_code"]:hover,
+.md-nav__link[href*="gan_code"]:hover,
+.md-nav__link[href*="rnn_code"]:hover,
+.md-nav__link[href*="diffusion_code"]:hover,
+.md-nav__link[href*="llm_code"]:hover,
+.md-nav__link[href*="stable_diffusion"]:hover {
+  background-color: rgba(33, 150, 243, 0.15) !important;
+}
+
+.md-nav__link[href*="uv_installation"].md-nav__link--active,
+.md-nav__link[href*="fastapi_installation"].md-nav__link--active,
+.md-nav__link[href*="docker_installation"].md-nav__link--active,
+.md-nav__link[href*="git_setup"].md-nav__link--active,
+.md-nav__link[href*="aws_cli"].md-nav__link--active,
+.md-nav__link[href*="gentext"].md-nav__link--active,
+.md-nav__link[href*="nn_code"].md-nav__link--active,
+.md-nav__link[href*="vae_code"].md-nav__link--active,
+.md-nav__link[href*="gan_code"].md-nav__link--active,
+.md-nav__link[href*="rnn_code"].md-nav__link--active,
+.md-nav__link[href*="diffusion_code"].md-nav__link--active,
+.md-nav__link[href*="llm_code"].md-nav__link--active,
+.md-nav__link[href*="stable_diffusion"].md-nav__link--active {
+  color: #2196F3 !important;
+  background-color: rgba(33, 150, 243, 0.1) !important;
 }

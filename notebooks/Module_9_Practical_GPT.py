@@ -1,28 +1,42 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.17.0"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
     import marimo as mo
-    import numpy as np
     return (mo,)
-
-
-@app.cell
-def _(torch):
-    # Check which GPU is available
-    device = torch.device('mps') if torch.backends.mps.is_available() else torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    print(f'Using device: {device}')
-    return (device,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""# Module 9: Practical - Transformer Architecture""")
     return
+
+
+@app.cell
+def _():
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import torch
+    import torch.nn as nn
+    from torch.utils.data import Dataset, DataLoader
+    import re
+
+    torch.manual_seed(42)
+    np.random.seed(42)
+
+    # Check which GPU is available
+    device = (
+        torch.device("mps")
+        if torch.backends.mps.is_available()
+        else torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    )
+
+    print(f"Using device: {device}")
+    return DataLoader, Dataset, device, nn, re, torch
 
 
 @app.cell(hide_code=True)
@@ -32,12 +46,7 @@ def _(mo):
 
 
 @app.cell
-def _():
-    import torch
-    import torch.nn as nn
-    from torch.utils.data import Dataset, DataLoader
-    import re
-
+def _(re):
     # Load and preprocess Count of Monte Cristo
     url = "https://www.gutenberg.org/cache/epub/1184/pg1184.txt"
 
@@ -45,8 +54,8 @@ def _():
     text = requests.get(url).text
 
     # Keep only the main body (remove header/footer)
-    start_idx = text.find("Chapter 1.")
-    end_idx = text.rfind("Chapter 5.") # text.rfind("End of the Project Gutenberg")
+    start_idx = text.find("Chapter 1")
+    end_idx = text.rfind("Chapter 5") # text.rfind("End of the Project Gutenberg")
     text = text[start_idx:end_idx]
 
     # Pre-processing
@@ -69,7 +78,7 @@ def _():
 
     # Encode tokens
     encoded = [vocab.get(word, vocab["<UNK>"]) for word in tokens]
-    return DataLoader, Dataset, encoded, inv_vocab, nn, torch
+    return encoded, inv_vocab
 
 
 @app.cell(hide_code=True)
@@ -117,6 +126,12 @@ def _(mo):
 
 
 @app.cell
+def _(torch):
+    torch.arange(10)
+    return
+
+
+@app.cell
 def _(device, torch):
     def causal_attention_mask(n_dest, n_src, device):
         i = torch.arange(n_dest, device=device).unsqueeze(1)
@@ -126,7 +141,7 @@ def _(device, torch):
 
     # Example usage:
     mask = causal_attention_mask(10, 10, device)
-    print(mask[0].T)
+    print(mask[2].T)
     return (causal_attention_mask,)
 
 
@@ -248,7 +263,7 @@ def _():
 def _():
     # Hyperparameters
     # Vocabulary and sequence
-    VOCAB_SIZE = 2400        # Size of your tokenizer vocab
+    VOCAB_SIZE = 10000        # Size of your tokenizer vocab
     MAX_LEN = 128            # Sequence length
 
     # Embedding and model size

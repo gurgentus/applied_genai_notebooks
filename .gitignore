@@ -179,3 +179,5 @@ data/
 checkpoints*
 old
 homeworks
+# Marimo session files
+**/__marimo__/

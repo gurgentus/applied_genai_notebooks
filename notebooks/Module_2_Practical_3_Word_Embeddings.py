@@ -11,16 +11,16 @@ def _():
     return (mo,)
 
 
-@app.cell(hide_code=True)
-def _():
-    import subprocess
+# @app.cell(hide_code=True)
+# def _():
+#     import subprocess
 
-    result = subprocess.run(
-        ["bash", "-c", "uv run python -m spacy download en_core_web_lg"],
-        capture_output=True,
-        text=True,
-    )
-    return
+#     result = subprocess.run(
+#         ["bash", "-c", "uv run python -m spacy download en_core_web_lg"],
+#         capture_output=True,
+#         text=True,
+#     )
+#     return
 
 
 @app.cell(hide_code=True)

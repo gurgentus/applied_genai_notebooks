@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.17.0"
 app = marimo.App(width="medium")
 
 
@@ -83,6 +83,12 @@ def _(re):
     return encoded, inv_vocab, vocab
 
 
+@app.cell
+def _(vocab):
+    vocab
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""Since we are training the model to predict the next word in a sequence, we will construct our training set features based on 30 word sequences from the text. The corresponding labels are the sequences shifted by one word.""")
@@ -142,7 +148,7 @@ def _(device, nn, torch):
             x = self.fc(x)
             return x, hidden
 
-    model = LSTMModel(vocab_size=2400).to(device)
+    model = LSTMModel().to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
     return criterion, model, optimizer

@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.17.0"
 app = marimo.App()
 
 
@@ -198,6 +198,12 @@ def _(mo):
     return (GridGame,)
 
 
+@app.cell
+def _(GridGame):
+    game = GridGame(rows=5, cols=5)
+    return (game,)
+
+
 @app.cell(hide_code=True)
 def _(game, mo):
     mo.md(f"""{game.print_grid()}""")
@@ -271,13 +277,11 @@ def _():
 
 
 @app.cell
-def _(GridGame, dijkstra):
-    game = GridGame(rows=5, cols=5)
-
+def _(dijkstra, game):
     cost, trajectory, costs = dijkstra(game.grid, game.terrain_costs, game.start, game.goal)
     print(f"\nTotal Cost: {cost}")
     print(f"Trajectory: {trajectory}")
-    return costs, game, trajectory
+    return costs, trajectory
 
 
 @app.cell(hide_code=True)

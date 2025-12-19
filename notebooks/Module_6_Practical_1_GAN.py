@@ -83,7 +83,14 @@ def _():
     from torch.utils.data import DataLoader
     import torch.nn.functional as F
     from torchvision.utils import make_grid
-    return datasets, make_grid, mo, nn, optim, plt, torch, transforms
+    return make_grid, mo, nn, np, optim, plt, torch, transforms
+
+
+@app.cell
+def _(np, torch):
+    torch.manual_seed(42)
+    np.random.seed(42)
+    return
 
 
 @app.cell
@@ -135,13 +142,13 @@ def _():
             if self.transform:
                 image = self.transform(image)
             return image, 0  # dummy label (not used in GANs)
-    return
+    return (CustomImageDataset,)
 
 
 @app.cell
 def _():
     BATCH_SIZE = 128
-    return
+    return (BATCH_SIZE,)
 
 
 @app.cell(hide_code=True)
@@ -151,21 +158,21 @@ def _(mo):
 
 
 @app.cell
-def _(datasets, torch, transforms):
+def _(BATCH_SIZE, CustomImageDataset, torch, transforms):
     transform = transforms.Compose([
+        # transforms.CenterCrop(64),
         transforms.Resize(128),
-        transforms.CenterCrop(64),
         transforms.ToTensor(),
         transforms.Normalize([0.5]*3, [0.5]*3),
     ])
 
     # Uncomment the following lines to use the custom dataset with downloaded images
-    # custom_dataset = CustomImageDataset(root_dir="../data/img_align_celeba", transform=transform)
-    # dataloader = torch.utils.data.DataLoader(custom_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0)
+    dataset = CustomImageDataset(root_dir="./data/celeba/img_align_celeba", transform=transform)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0)
 
     # Uncomment the following liens to use datasets.CelebA dataset instead of downloading one manually:
-    dataset = datasets.CelebA(root='./data', split='train', download=True, transform=transform)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True, num_workers=4)
+    # dataset = datasets.CelebA(root='./data', split='train', download=True, transform=transform)
+    # dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True, num_workers=4)
     return dataloader, dataset
 
 
@@ -191,6 +198,7 @@ def _(dataloader, plt):
     _first_img = next_batch_images[0] # retrieve the first image from the batch of 32
     _first_img = (_first_img * 0.5) + 0.5
     _first_label = next_batch_labels[0] # retrieve the first label from the batch of 32
+    print(_first_label)
     plt.imshow(_first_img.permute(1, 2, 0), cmap='gray') # imshow requires the image to be in height x width x channels format
     plt.show()
     return (next_batch_labels,)

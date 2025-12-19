@@ -5,6 +5,9 @@ resolution-markers = [
     "python_full_version >= '3.12'",
     "python_full_version < '3.12'",
 ]
+required-markers = [
+    "platform_machine == 'x86_64' and sys_platform == 'linux'",
+]
 
 [[package]]
 name = "altair"
@@ -64,20 +67,9 @@ name = "applied-genai-notebooks"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "altair" },
-    { name = "gdown" },
-    { name = "jupyter" },
     { name = "marimo" },
     { name = "matplotlib" },
-    { name = "mkdocs" },
-    { name = "mkdocs-material" },
-    { name = "mkdocs-pdf-export-plugin" },
-    { name = "mofresh" },
-    { name = "nltk" },
     { name = "numpy" },
-    { name = "pip" },
-    { name = "polars" },
-    { name = "pretty-midi" },
     { name = "requests" },
     { name = "scikit-learn" },
     { name = "scipy" },
@@ -87,22 +79,27 @@ dependencies = [
     { name = "torchvision" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "altair" },
+    { name = "gdown" },
+    { name = "jupyter" },
+    { name = "mkdocs" },
+    { name = "mkdocs-material" },
+    { name = "mkdocs-pdf-export-plugin" },
+    { name = "mofresh" },
+    { name = "nltk" },
+    { name = "pip" },
+    { name = "polars" },
+    { name = "pretty-midi" },
+    { name = "pymdown-extensions" },
+]
+
 [package.metadata]
 requires-dist = [
-    { name = "altair", specifier = ">=5.5.0" },
-    { name = "gdown", specifier = ">=5.2.0" },
-    { name = "jupyter", specifier = ">=1.1.1" },
     { name = "marimo", specifier = ">=0.13.15" },
     { name = "matplotlib", specifier = ">=3.10.3" },
-    { name = "mkdocs", specifier = ">=1.6.1" },
-    { name = "mkdocs-material", specifier = ">=9.6.16" },
-    { name = "mkdocs-pdf-export-plugin", specifier = ">=0.5.10" },
-    { name = "mofresh", specifier = ">=0.2.2" },
-    { name = "nltk", specifier = ">=3.9.1" },
     { name = "numpy", specifier = ">=2.3.0" },
-    { name = "pip", specifier = ">=25.2" },
-    { name = "polars", specifier = ">=1.32.2" },
-    { name = "pretty-midi", specifier = ">=0.2.11" },
     { name = "requests", specifier = ">=2.32.4" },
     { name = "scikit-learn", specifier = ">=1.7.1" },
     { name = "scipy", specifier = ">=1.16.1" },
@@ -110,6 +107,22 @@ requires-dist = [
     { name = "torch", specifier = ">=2.7.1" },
     { name = "torchinfo", specifier = ">=1.8.0" },
     { name = "torchvision", specifier = ">=0.22.1" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "altair", specifier = ">=5.5.0" },
+    { name = "gdown", specifier = ">=5.2.0" },
+    { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "mkdocs", specifier = ">=1.6.1" },
+    { name = "mkdocs-material", specifier = ">=9.6.16" },
+    { name = "mkdocs-pdf-export-plugin", specifier = ">=0.5.10" },
+    { name = "mofresh", specifier = ">=0.2.2" },
+    { name = "nltk", specifier = ">=3.9.1" },
+    { name = "pip", specifier = ">=25.2" },
+    { name = "polars", specifier = ">=1.32.2" },
+    { name = "pretty-midi", specifier = ">=0.2.11" },
+    { name = "pymdown-extensions", specifier = ">=10.15" },
 ]
 
 [[package]]

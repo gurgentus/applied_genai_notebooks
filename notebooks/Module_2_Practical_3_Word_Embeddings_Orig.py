@@ -16,11 +16,11 @@ def _():
     return (mo,)
 
 
-@app.cell(hide_code=True)
-def _():
-    import subprocess
-    result = subprocess.run(['bash', '-c', 'uv run python -m spacy download en_core_web_lg'], capture_output=True, text=True)
-    return result, subprocess
+# @app.cell(hide_code=True)
+# def _():
+#     import subprocess
+#     result = subprocess.run(['bash', '-c', 'uv run python -m spacy download en_core_web_lg'], capture_output=True, text=True)
+#     return result, subprocess
 
 
 @app.cell(hide_code=True)
@@ -39,7 +39,7 @@ def _(mo):
 def _():
     import spacy
 
-    nlp = spacy.load("en_core_web_lg")
+    nlp = spacy.load("en_core_web_sm")
     return nlp, spacy
 
 

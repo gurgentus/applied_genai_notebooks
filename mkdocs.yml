@@ -41,33 +41,62 @@ theme:
 
 nav:
   - Overview: index.md
-  - Module 1 Class Activity:
-    #   - Module Overview: Module 1/overview.md
-      - UV Package Manager Installation: Module 1/uv_installation.md
-      - FastAPI Installation: Module 1/fastapi_installation.md
-      - Docker Installation (Optional): Module 1/docker_installation.md
-      - Git Setup: Module 1/git_setup.md
-      - AWS Setup (Optional): Module 1/aws_cli_installation.md
-  - Module 2 Practical:
-      - Practical 1 - Probability: Module 2/practical_1_probability.md
-      - Practical 2 - Word Sampling: Module 2/practical_2_word_sampling.md
-      - Practical 3 - Word Embeddings: Module 2/practical_3_word_embeddings.md
+  - Running Locally: running_locally.md
+  - Module 1:
+      - Class Activity:
+          - UV Package Manager Installation: Module 1/uv_installation.md
+          - FastAPI Installation: Module 1/fastapi_installation.md
+          - Docker Installation (Optional): Module 1/docker_installation.md
+          - Git Setup: Module 1/git_setup.md
+          - AWS Setup (Optional): Module 1/aws_cli_installation.md
+  - Module 2:
+      - Practicals:
+          - 1 - Probability: Module 2/practical_1_probability.md
+          - 2 - Word Sampling: Module 2/practical_2_word_sampling.md
+          - 3 - Word Embeddings: Module 2/practical_3_word_embeddings.md
   - Module 3:
-      - First Project Setup: Module 3/gentext_project.md
+      - Class Activity:
+          - First Project Setup: Module 3/gentext_project.md
   - Module 4:
-      - Neural Network Helper Library Setup: Module 4/nn_code.md
+      - Practicals:
+          - 1 - FCNN: Module 4/practical_1_fcnn.md
+          - 2 - Convolutions: Module 4/practical_2_convolutions.md
+          - 3 - CNN: Module 4/practical_3_cnn.md
+      - Class Activity:
+          - Neural Network Helper Library Setup: Module 4/nn_code.md
   - Module 5:
-      - Adding VAE to Helper Library: Module 5/vae_code.md
+      - Practicals:
+          - VAE: Module 5/practical_vae.md
+      - Class Activity:
+          - Adding VAE to Helper Library: Module 5/vae_code.md
   - Module 6:
-      - Adding GAN to Helper Library: Module 6/gan_code.md
+      - Practicals:
+          - 1 - GAN: Module 6/practical_1_gan.md
+          - 2 - RNN: Module 6/practical_2_rnn.md
+      - Class Activity:
+          - Adding GAN to Helper Library: Module 6/gan_code.md
   - Module 7:
-      - Adding RNN to Text Generation API: Module 7/rnn_code.md
+      - Class Activity:
+          - Adding RNN to Text Generation API: Module 7/rnn_code.md
   - Module 8:
-      - Adding Diffusion to Helper Library: Module 8/diffusion_code.md
+      - Practicals:
+          - 1 - Energy-Based Methods: Module 8/practical_1_energy_based.md
+          - 2 - Diffusion Methods: Module 8/practical_2_diffusion.md
+      - Class Activity:
+          - Adding Diffusion to Helper Library: Module 8/diffusion_code.md
   - Module 9:
-      - Fine-tuning an LLM and adding to Text Generation API: Module 9/llm_code.md
+      - Practicals:
+          - GPT: Module 9/practical_gpt.md
+      - Class Activity:
+          - Fine-tuning an LLM and adding to Text Generation API: Module 9/llm_code.md
+  - Module 10:
+      - Practicals:
+          - Reinforcement Learning: Module 10/practical_rl.md
   - Module 13:
-      - Deploy a Stable Diffusion model to the API: Module 13/stable_diffusion.md
+      - Practicals:
+          - Music Transformer: Module 13/practical_music_transformer.md
+      - Class Activity:
+          - Deploy a Stable Diffusion model to the API: Module 13/stable_diffusion.md
 
 extra_css:
   - stylesheets/custom.css
@@ -81,6 +110,6 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-# plugins:
-#     - pdf-export:
-#         combined: true
+
+plugins:
+  - search

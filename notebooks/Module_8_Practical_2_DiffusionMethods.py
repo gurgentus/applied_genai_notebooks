@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.17.0"
 app = marimo.App(width="medium")
 
 
@@ -61,7 +61,6 @@ def _(torchvision, transforms):
     ])
     train_dataset = torchvision.datasets.Flowers102(root='./data', split='train', download=True, transform=transform)
     test_dataset = torchvision.datasets.Flowers102(root='./data', split='val', download=True, transform=transform)
-
     return test_dataset, train_dataset
 
 
@@ -216,7 +215,6 @@ def _(math, torch):
         noise_rates = torch.sin(diffusion_angles).reshape(original_shape)
 
         return noise_rates, signal_rates
-
     return linear_diffusion_schedule, offset_cosine_diffusion_schedule
 
 
@@ -230,7 +228,6 @@ def _(BATCH_SIZE, IMAGE_SIZE, linear_diffusion_schedule, torch, train_loader):
 
     noise_rates, signal_rates = linear_diffusion_schedule(diffusion_times)
     noisy_images = signal_rates * images + noise_rates * noises
-
     return (noisy_images,)
 
 
@@ -333,7 +330,6 @@ def _(F, nn, torch):
                 x = torch.cat([x, skip], dim=1)
                 x = block(x)
             return x
-
 
     return DownBlock, ResidualBlock, UpBlock
 
@@ -474,28 +470,28 @@ def _(IMAGE_SIZE, nn, show_image, torch):
             optimizer.zero_grad()
             loss.backward()
 
-            # Check for gradient issues
-            if torch.rand(1).item() < 0.01:
-                total_norm = 0
-                for p in self.network.parameters():
-                    if p.grad is not None:
-                        param_norm = p.grad.data.norm(2)
-                        total_norm += param_norm.item() ** 2
-                total_norm = total_norm ** (1. / 2)
-                print(f"Gradient norm: {total_norm:.4f}")
+            # # Check for gradient issues
+            # if torch.rand(1).item() < 0.01:
+            #     total_norm = 0
+            #     for p in self.network.parameters():
+            #         if p.grad is not None:
+            #             param_norm = p.grad.data.norm(2)
+            #             total_norm += param_norm.item() ** 2
+            #     total_norm = total_norm ** (1. / 2)
+            #     print(f"Gradient norm: {total_norm:.4f}")
 
             optimizer.step()
 
-            with torch.no_grad():
-                # Debug EMA update occasionally
-                if torch.rand(1).item() < 0.001:
-                    param_diff = 0
-                    for ema_param, param in zip(self.ema_network.parameters(), self.network.parameters()):
-                        param_diff += (ema_param - param).abs().mean().item()
-                    print(f"EMA Update Debug - Avg param difference: {param_diff:.6f}")
+            # with torch.no_grad():
+            #     # Debug EMA update occasionally
+            #     if torch.rand(1).item() < 0.001:
+            #         param_diff = 0
+            #         for ema_param, param in zip(self.ema_network.parameters(), self.network.parameters()):
+            #             param_diff += (ema_param - param).abs().mean().item()
+            #         print(f"EMA Update Debug - Avg param difference: {param_diff:.6f}")
 
-                for ema_param, param in zip(self.ema_network.parameters(), self.network.parameters()):
-                    ema_param.copy_(self.ema_decay * ema_param + (1. - self.ema_decay) * param)
+            #     for ema_param, param in zip(self.ema_network.parameters(), self.network.parameters()):
+            #         ema_param.copy_(self.ema_decay * ema_param + (1. - self.ema_decay) * param)
 
             return loss.item()
 
@@ -610,7 +606,6 @@ def _(torch):
         print(f"Train Loss: {checkpoint['train_loss']:.4f}, Val Loss: {checkpoint['val_loss']:.4f}")
 
         return checkpoint['epoch']
-
     return load_checkpoint, train_diffusion
 
 
