@@ -43,6 +43,25 @@
   max-width: none !important;
 }
 
+/* Hide table of contents sidebar on practical pages and class activities to maximize width */
+.md-sidebar--secondary:has(~ .md-content iframe),
+body:has(.md-content iframe) .md-sidebar--secondary,
+/* Hide TOC for all module pages (practicals and class activities) */
+body[data-md-color-scheme] .md-sidebar--secondary {
+  display: none !important;
+}
+
+/* Expand content to full width when TOC is hidden */
+body:has(.md-content iframe) .md-content,
+body[data-md-color-scheme] .md-content {
+  margin-right: 0 !important;
+}
+
+body:has(.md-content iframe) .md-main__inner,
+body[data-md-color-scheme] .md-main__inner {
+  margin-right: 0 !important;
+}
+
 /* Full-width iframes for marimo notebooks */
 iframe {
   width: 100%;
