@@ -40,8 +40,11 @@ As part of this activity you will move the appropriate functions from lecture co
 Use a code editor (such as VS Code) to create and edit the necessary Python files:
 
 ```bash
+code __init__.py
 code bigram_model.py
 ```
+
+- `app/__init__.py`: This file (which can be left empty) marks the `app` directory as a Python *package*. When Python sees an `__init__.py` inside a directory, it treats that directory as an importable package, which is what allows statements like `from app.bigram_model import BigramModel` to work. Without it, Python may not recognize `app` as a package and the import would fail.
 
 - `app/bigram_model.py`: This file will contain the logic for processing bigrams. You are responsible for editing this file. Use are free to use LLM based code assistants such as GitHub Copilot to help you transform the notebook code from Module 1 and make it available for your API.
 
