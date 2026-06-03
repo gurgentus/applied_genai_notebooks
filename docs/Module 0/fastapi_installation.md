@@ -9,35 +9,44 @@ FastAPI is a modern, fast (high-performance), web framework for building APIs wi
 ### 1. Initialize Your Project
 
 Start by creating a new project directory and initializing it with `uv`:
+
 ```bash
 uv init sps_genai
 ```
+
 This will create a project directory called `sps_genai` with a pre-configured virtual environment managed by `uv`.
 
 ### 2. Navigate to Your Project Directory
+
 Move into the newly created project directory:
+
 ```bash
 cd sps_genai
 ```
 
 ### 3. Install FastAPI
+
 Use UV to install FastAPI as a dependency:
+
 ```bash
 uv add fastapi --extra standard
 ```
 
 ### 4. Verify Installation
+
 Ensure that FastAPI and Uvicorn are installed successfully:
+
 ```bash
 uv tree
 ```
+
 This command will display a list of installed dependencies, including FastAPI.
 
 ---
 
 ## Running Your FastAPI Application
 
-1. Create a file named `app/main.py` in the `sps-genai` directory:
+1. Edit the file named `main.py` in the `sps-genai` directory:
 
 ```python
 from fastapi import FastAPI
@@ -50,6 +59,7 @@ def read_root():
 ```
 
 2. Run the application using Uvicorn:
+
 ```bash
 uv run fastapi dev
 ```
@@ -61,17 +71,22 @@ uv run fastapi dev
 ## Additional Tools and Features
 
 ### 1. Auto-Documentation
+
 FastAPI automatically generates interactive API documentation. After running your app, you can access the following:
+
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - ReDoc: `http://127.0.0.1:8000/redoc`
 
 ### 2. Adding More Dependencies
+
 To add additional dependencies (e.g., `Jupyter` or `Pydantic`):
+
 ```bash
 uv add jupyter pydantic
 ```
 
 ### 3. Managing Your Project
+
 `uv` helps manage your virtual environment and dependencies efficiently:
 
 - To remove a package: `uv remove package-name`

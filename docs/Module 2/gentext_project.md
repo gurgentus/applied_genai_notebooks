@@ -19,6 +19,7 @@ Before getting started, ensure you have the following installed:
 ### 1. Navigate to Your Project Directory
 
 Navigate to your existing project directory (created in Module 0):
+
 ```bash
 cd sps_genai
 ```
@@ -26,6 +27,7 @@ cd sps_genai
 ### 2. Create the Application Directory
 
 Create a new `app` directory to store your FastAPI application code:
+
 ```bash
 mkdir app
 cd app
@@ -36,12 +38,12 @@ cd app
 As part of this activity you will move the appropriate functions from lecture code to set this up.
 
 Use a code editor (such as VS Code) to create and edit the necessary Python files:
+
 ```bash
 code bigram_model.py
-code main.py
 ```
 
-- `bigram_model.py`: This file will contain the logic for processing bigrams. You are responsible for editing this file. Use are free to use LLM based code assistants such as GitHub Copilot to help you transform the notebook code from Module 1 and make it available for your API. 
+- `app/bigram_model.py`: This file will contain the logic for processing bigrams. You are responsible for editing this file. Use are free to use LLM based code assistants such as GitHub Copilot to help you transform the notebook code from Module 1 and make it available for your API.
 
 - `main.py`: This is the entry point for your FastAPI application.
 
@@ -81,11 +83,13 @@ def generate_text(request: TextGenerationRequest):
 ### 4. Install Required Dependencies
 
 Navigate back to the root project directory (if you're still in the `app` directory):
+
 ```bash
 cd ..
 ```
 
 Install the necessary libraries for your FastAPI application:
+
 ```bash
 uv add ...
 ```
@@ -93,6 +97,7 @@ uv add ...
 ### 5. Sync Dependencies
 
 Ensure that the dependencies are properly synchronized:
+
 ```bash
 uv sync
 ```
@@ -100,8 +105,9 @@ uv sync
 ### 6. Run the Application
 
 You can run the application directly with UV:
+
 ```bash
-uv run fastapi dev app/main.py
+uv run fastapi dev main.py
 ```
 
 Access your FastAPI application at: `http://127.0.0.1:8000`
@@ -115,11 +121,13 @@ If you want to containerize your application for deployment, you can use Docker.
 ### 7. Create a Dockerfile
 
 Create a `Dockerfile` for containerizing the application:
+
 ```bash
 code Dockerfile
 ```
 
 In the `Dockerfile`, add the following content:
+
 ```dockerfile
 # Use an official Python runtime as a parent image
 FROM python:3.12-slim-bookworm
@@ -155,11 +163,13 @@ CMD ["uv", "run", "fastapi", "run", "app/main.py", "--port", "80"]
 ### 8. Build and Run the Docker Image
 
 Build the Docker image:
+
 ```bash
 docker build -t sps-genai .
 ```
 
 After the build completes, you can run the container using:
+
 ```bash
 docker run -p 8000:80 sps-genai
 ```
@@ -169,4 +179,3 @@ Access your containerized FastAPI application at: `http://127.0.0.1:8000`
 View the interactive API documentation at: `http://127.0.0.1:8000/docs`
 
 Note: Although the container runs on port 80 internally, the port mapping (`-p 8000:80`) makes it accessible on port 8000 from your host machine, keeping the same access URL as the development server.
-
