@@ -48,7 +48,12 @@ code bigram_model.py
 
 - `app/bigram_model.py`: This file will contain the logic for processing bigrams. You are responsible for editing this file. Use are free to use LLM based code assistants such as GitHub Copilot to help you transform the notebook code from Module 1 and make it available for your API.
 
-- `main.py`: This is the entry point for your FastAPI application.
+- `main.py`: This is the entry point for your FastAPI application. It already exists in the **project root** (the `sps_genai` directory) since `uv init` created it there 
+
+```bash
+cd ..
+code main.py
+```
 
 ```python
 from typing import Union
@@ -158,9 +163,10 @@ RUN uv sync --frozen
 
 # Copy the application code
 COPY ./app /code/app
+COPY main.py /code/
 
 # Command to run the application
-CMD ["uv", "run", "fastapi", "run", "app/main.py", "--port", "80"]
+CMD ["uv", "run", "fastapi", "run", "main.py", "--port", "80"]
 ```
 
 ### 8. Build and Run the Docker Image
