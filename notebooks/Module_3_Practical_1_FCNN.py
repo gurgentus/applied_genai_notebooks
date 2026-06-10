@@ -101,7 +101,7 @@ def _(mo):
     $$
 
     where the one-hot label \( y_{i,\cdot} \) is the **true distribution** \( P_i \) over classes (all its mass on the correct class) and the softmax outputs \( \hat{y}_{i,\cdot} \) are the **model distribution** \( Q_i \). The loss is just the average of these per-example cross-entropies, \( \frac{1}{N} \sum_i H[P_i, Q_i] \). Since \( P_i \) is one-hot, \( H[P_i] = 0 \), so cross-entropy and KL divergence coincide here (\( H[P_i, Q_i] = D_{\text{KL}}(P_i \,\|\, Q_i) \)): minimizing the loss drives each \( Q_i \) toward the point-mass target \( P_i \).
-
+    """)
     # > **What are we really approximating? (population view)**
     # >
     # > This identity is *exact*, but it uses the **empirical** label distribution — the one-hot vectors are point masses on the labels we happened to observe. The average \( \frac{1}{N}\sum_i \) is a Monte Carlo estimate of an expectation over the true \( p_{\text{data}} \), and by the definition \( H[P,Q] = \mathbb{E}_{z\sim P}[-\log Q(z)] \) that expectation is itself a cross-entropy:
@@ -113,7 +113,6 @@ def _(mo):
     # > $$
     # >
     # > This is the **conditional** cross-entropy (over the label, averaged over inputs) — *not* a joint cross-entropy over \( (x,y) \). So minimizing the loss approximately pushes \( Q(y \mid x) \) toward the true conditional \( p_{\text{data}}(y \mid x) \), which need **not** be one-hot: for a given input there may be genuine label ambiguity. The one-hot target is simply the empirical stand-in from a single observed label per example.
-    # """)
     return
 
 

@@ -15,8 +15,10 @@ cd "$(git rev-parse --show-toplevel)"
 ZERO="0000000000000000000000000000000000000000"
 MANIFEST="exports/.manifest"
 SKIP_FILE="scripts/export-skip.txt"
-mapfile -t SKIPS < <(grep -vE '^\s*#|^\s*$' "$SKIP_FILE" 2>/dev/null || true)
-is_skipped() { local b="$1"; for s in "${SKIPS[@]}"; do [ "$b" = "$s" ] && return 0; done; return 1; }
+SKIPS=()
+while IFS= read -r _line; do [ -n "$_line" ] && SKIPS+=("$_line"); done \
+  < <(grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$SKIP_FILE" 2>/dev/null || true)
+is_skipped() { local b="$1" s; [ ${#SKIPS[@]} -eq 0 ] && return 1; for s in "${SKIPS[@]}"; do [ "$b" = "$s" ] && return 0; done; return 1; }
 
 # Collect notebooks changed in the commits being pushed.
 changed=""

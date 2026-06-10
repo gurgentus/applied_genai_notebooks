@@ -25,9 +25,11 @@ if   command -v gtimeout >/dev/null 2>&1; then TO=gtimeout
 elif command -v timeout  >/dev/null 2>&1; then TO=timeout
 else TO=""; fi
 
-# skip-list (basenames), ignoring comments/blanks
-mapfile -t SKIPS < <(grep -vE '^\s*#|^\s*$' "$SKIP_FILE" 2>/dev/null || true)
-is_skipped() { local b="$1"; for s in "${SKIPS[@]}"; do [ "$b" = "$s" ] && return 0; done; return 1; }
+# skip-list (basenames), ignoring comments/blanks. Portable (no mapfile: macOS bash 3.2).
+SKIPS=()
+while IFS= read -r _line; do [ -n "$_line" ] && SKIPS+=("$_line"); done \
+  < <(grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$SKIP_FILE" 2>/dev/null || true)
+is_skipped() { local b="$1" s; [ ${#SKIPS[@]} -eq 0 ] && return 1; for s in "${SKIPS[@]}"; do [ "$b" = "$s" ] && return 0; done; return 1; }
 
 update_manifest() {  # base hash
   local tmp; tmp="$(mktemp)"
