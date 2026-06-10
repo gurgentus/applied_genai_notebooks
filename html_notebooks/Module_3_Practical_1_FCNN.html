@@ -3,7 +3,7 @@
 <html>
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Module_4_Practical_1_FCNN</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>Module_3_Practical_1_FCNN</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
 /*-----------------------------------------------------------------------------
 | Copyright (c) Jupyter Development Team.
@@ -14255,6 +14255,27 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="Where-does-Cross-Entropy-come-from?-Maximum-Likelihood"><strong>Where does Cross Entropy come from? Maximum Likelihood</strong><a class="anchor-link" href="#Where-does-Cross-Entropy-come-from?-Maximum-Likelihood">¶</a></h4><p>The Categorical Cross Entropy Loss is not an arbitrary choice — it falls out of the <strong>maximum likelihood</strong> principle, and it is exactly the <strong>cross-entropy</strong> we introduced in <strong>Module 1, Practical 1 (Probability)</strong>.</p>
+<p>For a classification dataset of ( N ) i.i.d. examples ( (x_i, y_i) ), the network outputs ( Q(y \mid x_i; \theta) = \hat{y}_{i,c} ), the predicted probability of class ( c ) (here ( \theta ) collects all the network weights). The <strong>likelihood</strong> of the observed labels is the product of the probabilities the model assigns to each correct label, and maximum likelihood chooses the ( \theta ) that makes them most probable:</p>
+<p>$$
+\theta^\star = \arg\max_{\theta} \prod_{i=1}^{N} Q(y_i \mid x_i; \theta).
+$$</p>
+<p>Taking a logarithm (monotonic, so the maximizer is unchanged) turns the product into a sum; negating and scaling by ( \tfrac{1}{N} ) (a positive constant) turns the maximization into a minimization. Using the one-hot encoding ( y_{i,c} ) (equal to ( 1 ) for the correct class and ( 0 ) otherwise), the log-probability of the correct label becomes a sum over all classes:</p>
+<p>$$
+\theta^\star = \arg\min_{\theta} \underbrace{-\frac{1}{N} \sum_{i=1}^{N} \log Q(y_i \mid x_i; \theta)}_{\text{negative log-likelihood}}
+= \arg\min_{\theta} \underbrace{-\frac{1}{N} \sum_{i=1}^{N} \sum_{c=1}^{C} y_{i,c} \log \hat{y}_{i,c}}_{\text{Categorical Cross Entropy Loss}}.
+$$</p>
+<p>So minimizing the Categorical Cross Entropy Loss <strong>is</strong> maximum likelihood estimation of the class probabilities.</p>
+<p><strong>Connecting back to the Module 1 definition.</strong> Each per-example inner sum is <em>literally</em> the Module 1 cross-entropy ( H[P, Q] = -\sum_x P(x) \log Q(x) ), read with the <strong>class index ( c ) playing the role of the outcome ( x )</strong>:</p>
+<p>$$
+-\sum_{c=1}^{C} y_{i,c} \log \hat{y}_{i,c} \;=\; H[P_i, Q_i],
+$$</p>
+<p>where the one-hot label ( y_{i,\cdot} ) is the <strong>true distribution</strong> ( P_i ) over classes (all its mass on the correct class) and the softmax outputs ( \hat{y}<em>{i,\cdot} ) are the <strong>model distribution</strong> ( Q_i ). The loss is just the average of these per-example cross-entropies, ( \frac{1}{N} \sum_i H[P_i, Q_i] ). Since ( P_i ) is one-hot, ( H[P_i] = 0 ), so cross-entropy and KL divergence coincide here (( H[P_i, Q_i] = D</em>{\text{KL}}(P_i ,|, Q_i) )): minimizing the loss drives each ( Q_i ) toward the point-mass target ( P_i ).</p>
+<h1 id="%3E-What-are-we-really-approximating?-(population-view)">&gt; <strong>What are we really approximating? (population view)</strong><a class="anchor-link" href="#%3E-What-are-we-really-approximating?-(population-view)">¶</a></h1><h1 id="%3E">&gt;<a class="anchor-link" href="#%3E">¶</a></h1><h1 id="%3E-This-identity-is-exact,-but-it-uses-the-empirical-label-distribution-%E2%80%94-the-one-hot-vectors-are-point-masses-on-the-labels-we-happened-to-observe.-The-average-(-%5Cfrac%7B1%7D%7BN%7D%5Csum_i-)-is-a-Monte-Carlo-estimate-of-an-expectation-over-the-true-(-p_%7B%5Ctext%7Bdata%7D%7D-),-and-by-the-definition-(-H%5BP,Q%5D-=-%5Cmathbb%7BE%7D_%7Bz%5Csim-P%7D%5B-%5Clog-Q(z)%5D-)-that-expectation-is-itself-a-cross-entropy:">&gt; This identity is <em>exact</em>, but it uses the <strong>empirical</strong> label distribution — the one-hot vectors are point masses on the labels we happened to observe. The average ( \frac{1}{N}\sum_i ) is a Monte Carlo estimate of an expectation over the true ( p_{\text{data}} ), and by the definition ( H[P,Q] = \mathbb{E}_{z\sim P}[-\log Q(z)] ) that expectation is itself a cross-entropy:<a class="anchor-link" href="#%3E-This-identity-is-exact,-but-it-uses-the-empirical-label-distribution-%E2%80%94-the-one-hot-vectors-are-point-masses-on-the-labels-we-happened-to-observe.-The-average-(-%5Cfrac%7B1%7D%7BN%7D%5Csum_i-)-is-a-Monte-Carlo-estimate-of-an-expectation-over-the-true-(-p_%7B%5Ctext%7Bdata%7D%7D-),-and-by-the-definition-(-H%5BP,Q%5D-=-%5Cmathbb%7BE%7D_%7Bz%5Csim-P%7D%5B-%5Clog-Q(z)%5D-)-that-expectation-is-itself-a-cross-entropy:">¶</a></h1><h1 id="%3E">&gt;<a class="anchor-link" href="#%3E">¶</a></h1><h1 id="%3E-$$">&gt; $$<a class="anchor-link" href="#%3E-$$">¶</a></h1><h1 id="%3E-%5Cfrac%7B1%7D%7BN%7D-%5Csum_%7Bi=1%7D%5E%7BN%7D-%5Cbig%5B-%5Clog-Q(y_i-%5Cmid-x_i;-%5Ctheta)%5Cbig%5D">&gt; \frac{1}{N} \sum_{i=1}^{N} \big[-\log Q(y_i \mid x_i; \theta)\big]<a class="anchor-link" href="#%3E-%5Cfrac%7B1%7D%7BN%7D-%5Csum_%7Bi=1%7D%5E%7BN%7D-%5Cbig%5B-%5Clog-Q(y_i-%5Cmid-x_i;-%5Ctheta)%5Cbig%5D">¶</a></h1><h1 id="%3E-;;%5Cxrightarrow%7B;N-%5Cto-%5Cinfty;%7D;;">&gt; ;;\xrightarrow{;N \to \infty;};;<a class="anchor-link" href="#%3E-;;%5Cxrightarrow%7B;N-%5Cto-%5Cinfty;%7D;;">¶</a></h1><h1 id="%3E-%5Cmathbb%7BE%7D%7Bx-%5Csim-p%7B%5Ctext%7Bdata%7D%7D%7D%5CBig%5B,-H%5Cbig%5Bp_%7B%5Ctext%7Bdata%7D%7D(y-%5Cmid-x),,-Q(y-%5Cmid-x)%5Cbig%5D-%5CBig%5D.">&gt; \mathbb{E}<em>{x \sim p</em>{\text{data}}}\Big[, H\big[p_{\text{data}}(y \mid x),, Q(y \mid x)\big] \Big].<a class="anchor-link" href="#%3E-%5Cmathbb%7BE%7D%7Bx-%5Csim-p%7B%5Ctext%7Bdata%7D%7D%7D%5CBig%5B,-H%5Cbig%5Bp_%7B%5Ctext%7Bdata%7D%7D(y-%5Cmid-x),,-Q(y-%5Cmid-x)%5Cbig%5D-%5CBig%5D.">¶</a></h1><h1 id="%3E-$$">&gt; $$<a class="anchor-link" href="#%3E-$$">¶</a></h1><h1 id="%3E">&gt;<a class="anchor-link" href="#%3E">¶</a></h1><h1 id="%3E-This-is-the-conditional-cross-entropy-(over-the-label,-averaged-over-inputs)-%E2%80%94-not-a-joint-cross-entropy-over-(-(x,y)-).-So-minimizing-the-loss-approximately-pushes-(-Q(y-%5Cmid-x)-)-toward-the-true-conditional-(-p_%7B%5Ctext%7Bdata%7D%7D(y-%5Cmid-x)-),-which-need-not-be-one-hot:-for-a-given-input-there-may-be-genuine-label-ambiguity.-The-one-hot-target-is-simply-the-empirical-stand-in-from-a-single-observed-label-per-example.">&gt; This is the <strong>conditional</strong> cross-entropy (over the label, averaged over inputs) — <em>not</em> a joint cross-entropy over ( (x,y) ). So minimizing the loss approximately pushes ( Q(y \mid x) ) toward the true conditional ( p_{\text{data}}(y \mid x) ), which need <strong>not</strong> be one-hot: for a given input there may be genuine label ambiguity. The one-hot target is simply the empirical stand-in from a single observed label per example.<a class="anchor-link" href="#%3E-This-is-the-conditional-cross-entropy-(over-the-label,-averaged-over-inputs)-%E2%80%94-not-a-joint-cross-entropy-over-(-(x,y)-).-So-minimizing-the-loss-approximately-pushes-(-Q(y-%5Cmid-x)-)-toward-the-true-conditional-(-p_%7B%5Ctext%7Bdata%7D%7D(y-%5Cmid-x)-),-which-need-not-be-one-hot:-for-a-given-input-there-may-be-genuine-label-ambiguity.-The-one-hot-target-is-simply-the-empirical-stand-in-from-a-single-observed-label-per-example.">¶</a></h1><h1 id=""><a class="anchor-link" href="#">¶</a></h1>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper" tabindex="0"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>Recall that each artificial neuron in a neural network takes a linear combination of its inputs followed by the application of an activation function. For classification problems, the <code>softmax</code> activation function turns the outputs of the final layer into probabilities summing up to 1.</p>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
@@ -14489,7 +14510,7 @@ a.anchor-link {
 <span class="n">ax_main</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">,</span> <span class="s2">"softmax(logits)"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -14542,7 +14563,7 @@ a.anchor-link {
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Label: "</span><span class="p">,</span> <span class="n">_label</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Class: "</span><span class="p">,</span> <span class="n">CLASSES</span><span class="p">[</span><span class="n">_label</span><span class="p">])</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">_img</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -14577,7 +14598,7 @@ a.anchor-link {
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Label: "</span><span class="p">,</span> <span class="n">_label</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Class: "</span><span class="p">,</span> <span class="n">CLASSES</span><span class="p">[</span><span class="n">_label</span><span class="p">])</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">_img</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -14649,8 +14670,8 @@ a.anchor-link {
 <span class="n">_first_img</span> <span class="o">=</span> <span class="n">next_batch_images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># retrieve the first image from the batch of 32</span>
 <span class="n">_first_label</span> <span class="o">=</span> <span class="n">next_batch_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># retrieve the first label from the batch of 32</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">_first_img</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="c1"># imshow requires the image to be in height x width x channels format</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Label: "</span><span class="p">,</span> <span class="n">CLASSES</span><span class="p">[</span><span class="n">_first_label</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -14884,8 +14905,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span>
-    <span class="sa">fr</span><span class="s2">"""</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">fr</span><span class="s2">"""</span>
 <span class="s2">The model has an **accuracy of </span><span class="si">{</span><span class="n">test_accuracy</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%** on the test set, which is **better than random guessing** (10 classes).  </span>
 
 <span class="s2">However, this accuracy is **low** compared to **state-of-the-art models**.  </span>
@@ -14893,8 +14913,7 @@ a.anchor-link {
 <span class="s2">The **simple model** we built has **limited capacity** to learn the **complex patterns** in the CIFAR-10 dataset.  </span>
 
 <span class="s2">Next, we will build a **more advanced model** using convolutional neural network (CNN) to **improve accuracy** and **learn more complex patterns** in the data.</span>
-<span class="s2">"""</span>
-<span class="p">)</span>
+<span class="s2">"""</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -14945,7 +14964,7 @@ a.anchor-link {
         <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>

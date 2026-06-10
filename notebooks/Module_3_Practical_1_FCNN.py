@@ -1,12 +1,13 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.21.1"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
@@ -44,14 +45,15 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""# Module 3: Practical 1 - Fully Connected Neural Networks""")
+    mo.md("""
+    # Module 3: Practical 1 - Fully Connected Neural Networks
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ### Loss Functions
 
     We start with a brief review of Fully Connected Neural Networks. Recall that in Supervised Learning we tune the parameters of the neural network to minimize the "Loss Function" that represents how close the neural network outputs are to the labels defined in the dataset. There are many choices for loss functions, but the most common are Mean Square Loss for regression problems and Categorial Cross Entropy Loss for classification problems.
@@ -64,16 +66,62 @@ def _(mo):
 
     For the classification problems the network typically outputs $\hat{y}_{i, c}$ the probability of the example $i$ belonging to the class $c$. In the formula above, $y_{i,c}$ is equal to $1$ for the correct class, and $0$ otherwise, so we are really just averaging the logarithms of the probability the network outputs for the correct label in the training data.
 
-      - Loss: $-\log(p_{\text{correct class}})$
-      - Directly uses the index of the correct class
-    """
-    )
+    - Loss: $-\log(p_{\text{correct class}})$
+    - Directly uses the index of the correct class
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Recall that each artificial neuron in a neural network takes a linear combination of its inputs followed by the application of an activation function. For classification problems, the `softmax` activation function turns the outputs of the final layer into probabilities summing up to 1.""")
+    mo.md(r"""
+    #### **Where does Cross Entropy come from? Maximum Likelihood**
+
+    The Categorical Cross Entropy Loss is not an arbitrary choice — it falls out of the **maximum likelihood** principle, and it is exactly the **cross-entropy** we introduced in **Module 1, Practical 1 (Probability)**.
+
+    For a classification dataset of \( N \) i.i.d. examples \( (x_i, y_i) \), the network outputs \( Q(y \mid x_i; \theta) = \hat{y}_{i,c} \), the predicted probability of class \( c \) (here \( \theta \) collects all the network weights). The **likelihood** of the observed labels is the product of the probabilities the model assigns to each correct label, and maximum likelihood chooses the \( \theta \) that makes them most probable:
+
+    $$
+    \theta^\star = \arg\max_{\theta} \prod_{i=1}^{N} Q(y_i \mid x_i; \theta).
+    $$
+
+    Taking a logarithm (monotonic, so the maximizer is unchanged) turns the product into a sum; negating and scaling by \( \tfrac{1}{N} \) (a positive constant) turns the maximization into a minimization. Using the one-hot encoding \( y_{i,c} \) (equal to \( 1 \) for the correct class and \( 0 \) otherwise), the log-probability of the correct label becomes a sum over all classes:
+
+    $$
+    \theta^\star = \arg\min_{\theta} \underbrace{-\frac{1}{N} \sum_{i=1}^{N} \log Q(y_i \mid x_i; \theta)}_{\text{negative log-likelihood}}
+    = \arg\min_{\theta} \underbrace{-\frac{1}{N} \sum_{i=1}^{N} \sum_{c=1}^{C} y_{i,c} \log \hat{y}_{i,c}}_{\text{Categorical Cross Entropy Loss}}.
+    $$
+
+    So minimizing the Categorical Cross Entropy Loss **is** maximum likelihood estimation of the class probabilities.
+
+    **Connecting back to the Module 1 definition.** Each per-example inner sum is *literally* the Module 1 cross-entropy \( H[P, Q] = -\sum_x P(x) \log Q(x) \), read with the **class index \( c \) playing the role of the outcome \( x \)**:
+
+    $$
+    -\sum_{c=1}^{C} y_{i,c} \log \hat{y}_{i,c} \;=\; H[P_i, Q_i],
+    $$
+
+    where the one-hot label \( y_{i,\cdot} \) is the **true distribution** \( P_i \) over classes (all its mass on the correct class) and the softmax outputs \( \hat{y}_{i,\cdot} \) are the **model distribution** \( Q_i \). The loss is just the average of these per-example cross-entropies, \( \frac{1}{N} \sum_i H[P_i, Q_i] \). Since \( P_i \) is one-hot, \( H[P_i] = 0 \), so cross-entropy and KL divergence coincide here (\( H[P_i, Q_i] = D_{\text{KL}}(P_i \,\|\, Q_i) \)): minimizing the loss drives each \( Q_i \) toward the point-mass target \( P_i \).
+
+    # > **What are we really approximating? (population view)**
+    # >
+    # > This identity is *exact*, but it uses the **empirical** label distribution — the one-hot vectors are point masses on the labels we happened to observe. The average \( \frac{1}{N}\sum_i \) is a Monte Carlo estimate of an expectation over the true \( p_{\text{data}} \), and by the definition \( H[P,Q] = \mathbb{E}_{z\sim P}[-\log Q(z)] \) that expectation is itself a cross-entropy:
+    # >
+    # > $$
+    # > \frac{1}{N} \sum_{i=1}^{N} \big[-\log Q(y_i \mid x_i; \theta)\big]
+    # > \;\;\xrightarrow{\;N \to \infty\;}\;\;
+    # > \mathbb{E}_{x \sim p_{\text{data}}}\Big[\, H\big[p_{\text{data}}(y \mid x),\, Q(y \mid x)\big] \Big].
+    # > $$
+    # >
+    # > This is the **conditional** cross-entropy (over the label, averaged over inputs) — *not* a joint cross-entropy over \( (x,y) \). So minimizing the loss approximately pushes \( Q(y \mid x) \) toward the true conditional \( p_{\text{data}}(y \mid x) \), which need **not** be one-hot: for a given input there may be genuine label ambiguity. The one-hot target is simply the empirical stand-in from a single observed label per example.
+    # """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Recall that each artificial neuron in a neural network takes a linear combination of its inputs followed by the application of an activation function. For classification problems, the `softmax` activation function turns the outputs of the final layer into probabilities summing up to 1.
+    """)
     return
 
 
@@ -86,12 +134,15 @@ def _(np):
     def softmax(x):
         exp_x = np.exp(x - np.max(x))  # Subtract max for numerical stability
         return exp_x / exp_x.sum()
+
     return sigmoid, softmax
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Here is an example of what a simple Fully Connected Neural Network might looks like. Feel free to experiment with the inputs and the weights to see how they influence the output probabilities. Of course, the goal of training a neural network is to find the weights (coefficients) in each artificial neuron to minimize the loss function on the training examples.""")
+    mo.md(r"""
+    Here is an example of what a simple Fully Connected Neural Network might looks like. Feel free to experiment with the inputs and the weights to see how they influence the output probabilities. Of course, the goal of training a neural network is to find the weights (coefficients) in each artificial neuron to minimize the loss function on the training examples.
+    """)
     return
 
 
@@ -272,7 +323,7 @@ def _(
     ax_main.text(3, 1.4, f"softmax({y_inputs[2], y_inputs[1], y_inputs[1]})", fontsize=18, ha="center")
 
     plt.tight_layout()
-    plt.show()
+    plt.gcf()
     return
 
 
@@ -348,7 +399,9 @@ def _(
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Clearly, we need a systematic way to calculate these weights. Below we go over a typical neural network setup and training in PyTorch for the problem of classification of images from the CIFAR10 dataset.""")
+    mo.md(r"""
+    Clearly, we need a systematic way to calculate these weights. Below we go over a typical neural network setup and training in PyTorch for the problem of classification of images from the CIFAR10 dataset.
+    """)
     return
 
 
@@ -391,13 +444,15 @@ def _(CLASSES, plt, train_dataset):
     print("Label: ", _label)
     print("Class: ", CLASSES[_label])
     plt.imshow(_img.permute(1,2,0).squeeze())
-    plt.show()
+    plt.gcf()
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Note that each training example is a tuple containing the three dimensional image tensor (C by H by W) and the label.""")
+    mo.md(r"""
+    Note that each training example is a tuple containing the three dimensional image tensor (C by H by W) and the label.
+    """)
     return
 
 
@@ -415,13 +470,15 @@ def _(CLASSES, np, plt, train_dataset):
     print("Label: ", _label)
     print("Class: ", CLASSES[_label])
     plt.imshow(_img.permute(1,2,0).squeeze())
-    plt.show()
+    plt.gcf()
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""PyTorch has a special *DataLoader* class that takes care of some of the tedious details of constructing batches from the dataset.""")
+    mo.md(r"""
+    PyTorch has a special *DataLoader* class that takes care of some of the tedious details of constructing batches from the dataset.
+    """)
     return
 
 
@@ -444,13 +501,12 @@ def _(train_dataset, train_loader):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    **Dataloaders** provide multiple ways to access the data, either by converting it into a **Python list** or by using an **iterable**.  
+    mo.md(r"""
+    **Dataloaders** provide multiple ways to access the data, either by converting it into a **Python list** or by using an **iterable**.
 
-    Using `list(train_loader)`, as we have, loads the **entire dataset into memory**, which can be **slow** and even **fail** when dealing with large datasets.  
+    Using `list(train_loader)`, as we have, loads the **entire dataset into memory**, which can be **slow** and even **fail** when dealing with large datasets.
 
-    Since **neural network training algorithms process data in batches**, it is more efficient to use an **iterator**. Instead of retrieving the first batch like this:  
+    Since **neural network training algorithms process data in batches**, it is more efficient to use an **iterator**. Instead of retrieving the first batch like this:
     ```python
     list(train_loader)[0]
     ```
@@ -459,24 +515,21 @@ def _(mo):
     next(iter(train_loader))
     ```
     This approach retrieves only the first batch without loading the entire dataset, making it memory-efficient and faster.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     Let's load the first batch of our data (image and label) and display it using the `matplotlib` library.
 
-    Recall that the shape returned by 
+    Recall that the shape returned by
     ```python
     next(iter(train_loader))
     ```
     is 32 by 3 by 32 by 32. This shape represents the batch size, number of channels, height, and width of the image, respectively.
-    """
-    )
+    """)
     return
 
 
@@ -486,14 +539,16 @@ def _(CLASSES, plt, train_loader):
     _first_img = next_batch_images[0] # retrieve the first image from the batch of 32
     _first_label = next_batch_labels[0] # retrieve the first label from the batch of 32
     plt.imshow(_first_img.permute(1, 2, 0)) # imshow requires the image to be in height x width x channels format
-    plt.show()
     print("Label: ", CLASSES[_first_label])
+    plt.gcf()
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""Why is the first image different from when we used the dataset directly?""")
+    mo.md("""
+    Why is the first image different from when we used the dataset directly?
+    """)
     return
 
 
@@ -538,8 +593,7 @@ def _(NUM_CLASSES, device, nn, torch):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ### Model Checkpoints
 
     **Checkpoints** are snapshots of the model's state (e.g. model weights) during training that allow you to:
@@ -571,8 +625,7 @@ def _(mo):
     - Reset learning rates to initial values
     - Lose accumulated momentum
     - Potentially cause training instability or slower convergence
-    """
-    )
+    """)
     return
 
 
@@ -619,7 +672,9 @@ def _(torch):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""### Training the model""")
+    mo.md("""
+    ### Training the model
+    """)
     return
 
 
@@ -754,8 +809,7 @@ def _(device, model, test_loader, torch):
 
 @app.cell(hide_code=True)
 def _(mo, test_accuracy):
-    mo.md(
-        fr"""
+    mo.md(fr"""
     The model has an **accuracy of {test_accuracy:.2f}%** on the test set, which is **better than random guessing** (10 classes).  
 
     However, this accuracy is **low** compared to **state-of-the-art models**.  
@@ -763,14 +817,15 @@ def _(mo, test_accuracy):
     The **simple model** we built has **limited capacity** to learn the **complex patterns** in the CIFAR-10 dataset.  
 
     Next, we will build a **more advanced model** using convolutional neural network (CNN) to **improve accuracy** and **learn more complex patterns** in the data.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We end with seeing how the trained model classified 10 random images from a test batch.""")
+    mo.md(r"""
+    We end with seeing how the trained model classified 10 random images from a test batch.
+    """)
     return
 
 
@@ -810,7 +865,7 @@ def _(CLASSES, device, model, np, plt, test_loader, torch):
             transform=ax.transAxes,
         )
         ax.imshow(img)
-    plt.show()
+    plt.gcf()
     return
 
 
@@ -821,8 +876,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ### Loading Checkpoints
 
     The `load_checkpoint()` function restores both the model and optimizer to their exact state from a saved checkpoint.
@@ -869,7 +923,7 @@ def _(mo):
     load_checkpoint(model, optimizer, 'checkpoints_fcnn/fcnn_epoch_005.pth', device)
     test_model(model)
 
-    # Test epoch 10 performance  
+    # Test epoch 10 performance
     load_checkpoint(model, optimizer, 'checkpoints_fcnn/fcnn_epoch_010.pth', device)
     test_model(model)
     ```
@@ -878,8 +932,7 @@ def _(mo):
     - The model architecture must match the saved checkpoint
     - Device mapping handles loading checkpoints across different devices
     - For inference only, you can pass a dummy optimizer (but it's still required)
-    """
-    )
+    """)
     return
 
 
@@ -903,7 +956,6 @@ def _():
     # print(f"Loaded model from epoch {_epoch}")
     # print(f"Sample predictions: {CLASSES[_test_preds[:5].cpu().numpy()]}")
     # print(f"Actual labels: {CLASSES[_test_labels[:5].cpu().numpy()]}")
-
     return
 
 

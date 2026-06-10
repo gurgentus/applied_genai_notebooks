@@ -1,12 +1,13 @@
 import marimo
 
-__generated_with = "0.17.0"
+__generated_with = "0.21.1"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
@@ -21,24 +22,25 @@ def _():
     import torchvision.transforms as transforms
     from torch.utils.data import DataLoader
     import torch.nn.functional as F
+
     return DataLoader, F, nn, np, plt, torch, torchvision, transforms
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""# Module 7: Practical 2 - Diffusion Methods""")
+    mo.md("""
+    # Module 7: Practical 2 - Diffusion Methods
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     Recall that the idea behind Diffusion Models is to map training data to a simple normal distribution by adding noise through a series of steps and then have a neural network **learn** the inverse process.
 
     In contrast to autoencoders, the first step is done through simple well defined functions and only the decoder is learned.
-    """
-    )
+    """)
     return
 
 
@@ -93,9 +95,8 @@ def _(first_image, first_label, plt):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    Let's take $x_0$ to be a random variable representing images in our data distribution. We will assume that it has mean $0$ and variance $1$. This is ok since we have preprocessed the training images to have mean $0$ and variance $1$. 
+    mo.md(r"""
+    Let's take $x_0$ to be a random variable representing images in our data distribution. We will assume that it has mean $0$ and variance $1$. This is ok since we have preprocessed the training images to have mean $0$ and variance $1$.
 
     Next, we will corrupt the images by adding standard gaussian noise $\epsilon$ (mean 0, variance 1). How much noise should be added?
 
@@ -103,15 +104,14 @@ def _(mo):
 
     $x_1 = \sqrt{1-\beta}x_0 + \sqrt{\beta} \epsilon$
 
-    Then if $x_0$ has mean $0$ and variance $1$, $x_1$ will have mean: 
+    Then if $x_0$ has mean $0$ and variance $1$, $x_1$ will have mean:
 
-    $\sqrt{1-\beta}*0+\sqrt{\beta}*0=0$ 
+    $\sqrt{1-\beta}*0+\sqrt{\beta}*0=0$
 
-    and variance: 
+    and variance:
 
     $(\sqrt{1-\beta})^2*1 + (\sqrt{\beta})^2*1=1-\beta+\beta=1$.
-    """
-    )
+    """)
     return
 
 
@@ -126,7 +126,9 @@ def _(np):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""How does changing $\beta$ influence the amount of noise added to the image?  Try to find a value that makes the image look like a random noise image.  You can use the slider below to change the value of $\beta$.""")
+    mo.md(r"""
+    How does changing $\beta$ influence the amount of noise added to the image?  Try to find a value that makes the image look like a random noise image.  You can use the slider below to change the value of $\beta$.
+    """)
     return
 
 
@@ -145,15 +147,16 @@ def _(corrupt_image, first_image, show_image, slider):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""We can repeat this process using the new $x_1$ as the input to the next step, and so on, until we reach $x_T$. Moreover, we can also use a different $\beta$ for each step. The setup of how this parameter should vary is referred to as the **diffusion schedule**.""")
+    mo.md(r"""
+    We can repeat this process using the new $x_1$ as the input to the next step, and so on, until we reach $x_T$. Moreover, we can also use a different $\beta$ for each step. The setup of how this parameter should vary is referred to as the **diffusion schedule**.
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    We'll want to repeat this process through several iterations, at each step corrupting the image by a small amount. To make things simpler, we can perform some mathematical magic using the fact that multiplying a Gaussian distribution by a constant results in another Gaussian distribution. Similarly, adding two Gaussians results in a Gaussian.  So, one can show mathematically that for two standard Gaussian random variables: 
+    mo.md(r"""
+    We'll want to repeat this process through several iterations, at each step corrupting the image by a small amount. To make things simpler, we can perform some mathematical magic using the fact that multiplying a Gaussian distribution by a constant results in another Gaussian distribution. Similarly, adding two Gaussians results in a Gaussian.  So, one can show mathematically that for two standard Gaussian random variables:
 
     $A \epsilon_0 + B \epsilon_1 = \left(\sqrt{A^2 + B^2}\right)\epsilon$, where $\epsilon$ is also a Gaussian random variable.
 
@@ -162,14 +165,15 @@ def _(mo):
     $x_2 = \sqrt{1-\beta_1}x_1 + \sqrt{\beta_1} \epsilon_1 = \sqrt{1-\beta_1}(\sqrt{1-\beta_0}x_0 + \sqrt{\beta_0} \epsilon_0) + \sqrt{\beta_1} \epsilon_1 = \sqrt{(1-\beta_0)(1-\beta_1)}x_0 + \sqrt{\beta_0(1-\beta_1)}\epsilon_0 + \sqrt{\beta_1}\epsilon_1 = \sqrt{(1-\beta_0)(1-\beta_1)}x_0 + \sqrt{1 - (1-\beta_0)(1-\beta_1)}\epsilon$,
 
     and so on. This will be used in defining the multipliers for the image (signal rates) and the noise (noise rates).
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Let's look at examples of several diffusion schedules:""")
+    mo.md(r"""
+    Let's look at examples of several diffusion schedules:
+    """)
     return
 
 
@@ -215,6 +219,7 @@ def _(math, torch):
         noise_rates = torch.sin(diffusion_angles).reshape(original_shape)
 
         return noise_rates, signal_rates
+
     return linear_diffusion_schedule, offset_cosine_diffusion_schedule
 
 
@@ -241,7 +246,9 @@ def _(noisy_images, plt):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""The idea is to train a neural network to model the noise that was added. The input to this network will be the noisy image and the variance of the noise that was added (this comes from the diffusion schedule we select). The noise variance is typically encoded using some sort of an embedding, in this case a Sinusoidal Embedding.""")
+    mo.md(r"""
+    The idea is to train a neural network to model the noise that was added. The input to this network will be the noisy image and the variance of the noise that was added (this comes from the diffusion schedule we select). The noise variance is typically encoded using some sort of an embedding, in this case a Sinusoidal Embedding.
+    """)
     return
 
 
@@ -265,12 +272,15 @@ def _(nn, torch):
             sin_part = torch.sin(self.angular_speeds * x)
             cos_part = torch.cos(self.angular_speeds * x)
             return torch.cat([sin_part, cos_part], dim=-1)         
+
     return SinusoidalEmbedding, math
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Next we build the three new layers used in a UNet neural network, a popular architecture used in Diffusion Models.""")
+    mo.md(r"""
+    Next we build the three new layers used in a UNet neural network, a popular architecture used in Diffusion Models.
+    """)
     return
 
 
@@ -380,6 +390,7 @@ def _(DownBlock, F, ResidualBlock, SinusoidalEmbedding, UpBlock, nn, torch):
             x = self.up3(x, skips)
 
             return self.final(x)
+
     return (UNet,)
 
 
@@ -517,12 +528,15 @@ def _(IMAGE_SIZE, nn, show_image, torch):
                 diffusion_steps=20,
             ).cpu()
             show_image(generated_images[0])      
+
     return (DiffusionModel,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""The training loop looks similar to the one used in the previous modules.""")
+    mo.md(r"""
+    The training loop looks similar to the one used in the previous modules.
+    """)
     return
 
 
@@ -606,6 +620,7 @@ def _(torch):
         print(f"Train Loss: {checkpoint['train_loss']:.4f}, Val Loss: {checkpoint['val_loss']:.4f}")
 
         return checkpoint['epoch']
+
     return load_checkpoint, train_diffusion
 
 

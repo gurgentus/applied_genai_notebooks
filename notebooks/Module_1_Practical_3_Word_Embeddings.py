@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.21.1"
 app = marimo.App(width="medium")
 
 
@@ -11,27 +11,13 @@ def _():
     return (mo,)
 
 
-# @app.cell(hide_code=True)
-# def _():
-#     import subprocess
-
-#     result = subprocess.run(
-#         ["bash", "-c", "uv run python -m spacy download en_core_web_lg"],
-#         capture_output=True,
-#         text=True,
-#     )
-#     return
-
-
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Setup
 
     First, we import the *spacy* library and load the large English model.
-    """
-    )
+    """)
     return
 
 
@@ -45,7 +31,9 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""Next, let's define a function to calculate word embeddings based on an input word:""")
+    mo.md("""
+    Next, let's define a function to calculate word embeddings based on an input word:
+    """)
     return
 
 
@@ -60,7 +48,9 @@ def _(nlp):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Let's try with the word 'apple'.  For brevity, only the first elements of the embedding vector are displayed:""")
+    mo.md(r"""
+    Let's try with the word 'apple'.  For brevity, only the first elements of the embedding vector are displayed:
+    """)
     return
 
 
@@ -92,12 +82,10 @@ def _(calculate_embedding, word_input_ui):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Similarity
     Let's add a function to calculate the similarity between two words based on their embeddings:
-    """
-    )
+    """)
     return
 
 
@@ -111,7 +99,9 @@ def _(nlp):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""Compare embeddings of words: 'apple' and 'car'""")
+    mo.md("""
+    Compare embeddings of words: 'apple' and 'car'
+    """)
     return
 
 
@@ -201,8 +191,7 @@ def _(la_word, la_word4):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ----
     ## Sentence Embeddings
 
@@ -217,8 +206,7 @@ def _(mo):
     print("Response 2 Similarity: ", nlp(query).similarity(nlp(info_2)))
     print("Response 3 Similarity: ", nlp(query).similarity(nlp(info_3)))
     ```
-    """
-    )
+    """)
     return
 
 
@@ -236,7 +224,9 @@ def _(nlp):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""Being able to quickly calculate similarities between a query and target information text is very powerful for Information Retrieval, especially when combined with Large Language Models trained for chat/question answering capabilities.""")
+    mo.md(r"""
+    Being able to quickly calculate similarities between a query and target information text is very powerful for Information Retrieval, especially when combined with Large Language Models trained for chat/question answering capabilities.
+    """)
     return
 
 

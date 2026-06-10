@@ -26,7 +26,7 @@ COPY notebooks/Module_7_Practical_1_EnergyBasedMethods.py ./
 COPY notebooks/Module_7_Practical_2_DiffusionMethods.py ./
 COPY notebooks/Module_8_Practical_GPT.py ./
 COPY notebooks/Module_9_Practical_ReinforcementLearning.py ./
-COPY notebooks/Module_Module_12_Practical_Music_Transformer.py ./
+COPY notebooks/Module_12_Practical_Music_Transformer.py ./
 
 # Create non-root user and set ownership
 RUN useradd -m -u 1000 marimo && \
