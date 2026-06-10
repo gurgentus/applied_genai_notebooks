@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Pre-push hook: ensure exports/ is in sync with notebooks changed in the
+# commits being pushed. Uses exports/.manifest (notebook -> git blob hash at
+# last export) to decide what's stale — NOT output diffing, because executed
+# exports aren't byte-deterministic and would otherwise loop forever.
+#
+# If anything is stale, it re-exports those notebooks, stages exports/, and
+# aborts the push so you commit the regenerated files and push again. The
+# second push finds the manifest in sync and proceeds.
+#
+# Installed by scripts/install-hooks.sh
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+ZERO="0000000000000000000000000000000000000000"
+MANIFEST="exports/.manifest"
+SKIP_FILE="scripts/export-skip.txt"
+mapfile -t SKIPS < <(grep -vE '^\s*#|^\s*$' "$SKIP_FILE" 2>/dev/null || true)
+is_skipped() { local b="$1"; for s in "${SKIPS[@]}"; do [ "$b" = "$s" ] && return 0; done; return 1; }
+
+# Collect notebooks changed in the commits being pushed.
+changed=""
+while read -r local_ref local_oid remote_ref remote_oid; do
+  [ "$local_oid" = "$ZERO" ] && continue
+  if [ "$remote_oid" = "$ZERO" ]; then rng="$local_oid --not --remotes=origin"; else rng="$remote_oid..$local_oid"; fi
+  changed="$changed
+$(git log --name-only --pretty=format: $rng -- 'notebooks/*.py' 2>/dev/null)"
+done
+changed=$(echo "$changed" | grep -E '^notebooks/.+\.py$' | sort -u)
+[ -z "$changed" ] && exit 0
+
+# Decide which changed notebooks are stale vs the manifest.
+stale=""; skipped_changed=""
+while IFS= read -r path; do
+  [ -z "$path" ] && continue
+  base="$(basename "${path%.py}")"
+  if is_skipped "$base"; then skipped_changed="$skipped_changed $base"; continue; fi
+  cur="$(git hash-object "$path" 2>/dev/null)"
+  rec="$(grep "^$base " "$MANIFEST" 2>/dev/null | awk '{print $2}')"
+  [ "$cur" != "$rec" ] && stale="$stale $path"
+done <<< "$changed"
+
+[ -n "$skipped_changed" ] && echo "⚠️  changed but export-skipped (not in site):$skipped_changed"
+
+if [ -z "$stale" ]; then
+  echo "✅ Notebook exports are in sync."
+  exit 0
+fi
+
+echo "🔄 Re-exporting notebooks whose source changed since last export:"
+echo "$stale" | tr ' ' '\n' | sed '/^$/d;s/^/   • /'
+
+# shellcheck disable=SC2086
+if ! scripts/export_notebooks.sh $stale; then
+  echo "❌ A notebook failed to export. Push aborted. See exports/_export.log"
+  exit 1
+fi
+
+git add exports/
+echo ""
+echo "📝 Exports regenerated and staged. Commit them and push again:"
+echo "     git commit -m 'chore: regenerate notebook exports' && git push"
+exit 1

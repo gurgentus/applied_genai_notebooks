@@ -181,3 +181,8 @@ old
 homeworks
 # Marimo session files
 **/__marimo__/
+
+# Static notebook exports: keep the HTML + index, ignore export logs
+exports/_*.log
+# Artifacts produced by running notebook exports from notebooks/
+notebooks/generated_*.mid

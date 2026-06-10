@@ -1,0 +1,6 @@
+# The static image (Dockerfile.static) only needs the exported HTML.
+# Ignore everything, then allow exports/ (minus its logs) to keep the
+# Railway build context tiny — no .git, .venv, data/, jupyter_notebooks/, etc.
+*
+!exports/
+exports/_*.log
