@@ -15,7 +15,7 @@ cd "$(dirname "$0")/.."
 
 OUT=exports
 MANIFEST="$OUT/.manifest"
-TIMEOUT="${EXPORT_TIMEOUT:-1200}"          # seconds per notebook
+TIMEOUT="${EXPORT_TIMEOUT:-12000}"          # seconds per notebook
 SKIP_FILE="scripts/export-skip.txt"
 
 mkdir -p "$OUT"; touch "$MANIFEST"
