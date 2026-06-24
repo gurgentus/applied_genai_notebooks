@@ -342,7 +342,7 @@ def _(
     lr = 5e-5
     n_critic = 5
     clip_value = 0.01
-    epochs = 20
+    epochs = 1
 
     gen = Generator(z_dim).to(device)
     critic = Critic().to(device)
