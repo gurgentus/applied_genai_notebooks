@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.21.1"
+__generated_with = "0.23.9"
 app = marimo.App(width="medium")
 
 
@@ -78,10 +78,7 @@ def _():
     import torch
     import torch.nn as nn
     import torch.optim as optim
-    import torchvision
-    from torchvision import datasets, transforms
-    from torch.utils.data import DataLoader
-    import torch.nn.functional as F
+    from torchvision import transforms
     from torchvision.utils import make_grid
 
     return make_grid, mo, nn, np, optim, plt, torch, transforms
@@ -156,8 +153,8 @@ def _(CustomImageDataset, torch, transforms):
     BATCH_SIZE = 128
 
     transform = transforms.Compose([
-        # transforms.CenterCrop(64),
-        transforms.Resize(128),
+        transforms.Resize(64),
+        transforms.CenterCrop(64),
         transforms.ToTensor(),
         transforms.Normalize([0.5]*3, [0.5]*3),
     ])
@@ -169,17 +166,7 @@ def _(CustomImageDataset, torch, transforms):
     # Uncomment the following liens to use datasets.CelebA dataset instead of downloading one manually:
     # dataset = datasets.CelebA(root='./data', split='train', download=True, transform=transform)
     # dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True, num_workers=4)
-    return dataloader, dataset
-
-
-@app.cell
-def _(dataset, next_batch_labels, plt):
-    print(dataset[0][0].shape)
-    _first_img = dataset[8][0] # retrieve the first image from the batch of 32
-    _first_img = (_first_img * 0.5) + 0.5
-    _first_label = next_batch_labels[0] # retrieve the first label from the batch of 32
-    plt.imshow(_first_img.permute(1, 2, 0), cmap='gray') 
-    return
+    return (dataloader,)
 
 
 @app.cell(hide_code=True)
@@ -199,7 +186,7 @@ def _(dataloader, plt):
     print(_first_label)
     plt.imshow(_first_img.permute(1, 2, 0), cmap='gray') # imshow requires the image to be in height x width x channels format
     plt.show()
-    return (next_batch_labels,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -222,17 +209,14 @@ def _(nn):
             self.conv2 = nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1, bias=False)
             self.batchnorm2 = nn.BatchNorm2d(128)
             self.act2 = nn.LeakyReLU(0.2, inplace=True)
-            #self.drop2 = nn.Dropout(0.3)
 
             self.conv3 = nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1, bias=False)
             self.batchnorm3 = nn.BatchNorm2d(256)
             self.act3 = nn.LeakyReLU(0.2, inplace=True)
-            #self.drop3 = nn.Dropout(0.3)
 
             self.conv4 = nn.Conv2d(256, 512, kernel_size=4, stride=2, padding=1, bias=False)
             self.batchnorm4 = nn.BatchNorm2d(512)
             self.act4 = nn.LeakyReLU(0.2, inplace=True)
-            #self.drop4 = nn.Dropout(0.3)
 
             self.conv5 = nn.Conv2d(512, 1, kernel_size=4, stride=1, padding=0, bias=False)
             self.flatten = nn.Flatten()
@@ -245,17 +229,14 @@ def _(nn):
             x = self.conv2(x)
             x = self.batchnorm2(x)
             x = self.act2(x)
-            #x = self.drop2(x)
 
             x = self.conv3(x)
             x = self.batchnorm3(x)
             x = self.act3(x)
-            #x = self.drop3(x)
 
             x = self.conv4(x)
             x = self.batchnorm4(x)
             x = self.act4(x)
-            #x = self.drop4(x)
 
             x = self.conv5(x)
             x = self.flatten(x)
@@ -345,10 +326,11 @@ def _(
     Generator,
     dataloader,
     device,
+    image_widget,
+    imagechart,
     losschart,
     make_grid,
     optim,
-    plt,
     torch,
     widget,
 ):
@@ -371,8 +353,6 @@ def _(
     fixed_noise = torch.randn(64, z_dim, 1, 1).to(device)
 
     for epoch in range(epochs):
-        # for batch_idx, (real, _) in enumerate(dataloader):
-        # model.train()
         train_loader_with_progress = tqdm(
             iterable=dataloader, ncols=120, desc=f"Epoch {epoch+1}/{epochs}"
         )
@@ -424,29 +404,22 @@ def _(
                 )
                 widget.src = losschart(datalogs) 
 
-
-            # if batch_idx % 100 == 0:
-            #     print(f"[Epoch {epoch}/{epochs}] [Batch {batch_idx}/{len(dataloader)}] "
-            #           f"[D loss: {loss_critic.item():.4f}] [G loss: {loss_gen.item():.4f}]")
-
         # Save sample images
         with torch.no_grad():
             fake = gen(fixed_noise).detach().cpu()
         grid = make_grid(fake, normalize=True)
-        plt.imshow(grid.permute(1, 2, 0))
-        plt.title(f"Epoch {epoch}")
-        plt.axis("off")
-        plt.show()  
+        image_widget.src = imagechart(grid, epoch)
     return
 
 
 @app.cell
-def _(plt):
+def _(mo, plt):
     import altair as alt
     from mofresh import refresh_matplotlib, ImageRefreshWidget
     import polars as pl
 
     widget = ImageRefreshWidget(src="")
+    image_widget = ImageRefreshWidget(src="")
 
     @refresh_matplotlib
     def losschart(data):
@@ -456,9 +429,20 @@ def _(plt):
         plt.ylabel("Loss")
         plt.xlabel("Epoch")
 
+    @refresh_matplotlib
+    def imagechart(grid, epoch):
+        plt.imshow(grid.permute(1, 2, 0))
+        plt.title(f"Epoch {epoch}")
+        plt.axis("off")
 
-    widget
-    return losschart, widget
+
+    mo.vstack([widget, image_widget])
+    return image_widget, imagechart, losschart, widget
+
+
+@app.cell
+def _():
+    return
 
 
 @app.cell
