@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.23.9"
 app = marimo.App(width="medium")
 
 
@@ -13,13 +13,17 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""# Module 3: Practical 3 - Convolutional Neural Networks""")
+    mo.md("""
+    # Module 3: Practical 3 - Convolutional Neural Networks
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""In this practical, we "upgrade" our Fully Connected Neural Network to a Convolutional Neural Network (CNN). Except for the model definition, most of the code here is identical to Practical 1.""")
+    mo.md(r"""
+    In this practical, we "upgrade" our Fully Connected Neural Network to a Convolutional Neural Network (CNN). Except for the model definition, most of the code here is identical to Practical 1.
+    """)
     return
 
 
@@ -148,13 +152,12 @@ def _(train_dataset, train_loader):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    **Dataloaders** provide multiple ways to access the data, either by converting it into a **Python list** or by using an **iterable**.  
+    mo.md(r"""
+    **Dataloaders** provide multiple ways to access the data, either by converting it into a **Python list** or by using an **iterable**.
 
-    Using `list(train_loader)`, as we have shown in Practical 1, loads the **entire dataset into memory**, which can be **slow** and even **fail** when dealing with large datasets.  
+    Using `list(train_loader)`, as we have shown in Practical 1, loads the **entire dataset into memory**, which can be **slow** and even **fail** when dealing with large datasets.
 
-    Since **neural network training algorithms process data in batches**, it is more efficient to use an **iterator**. Instead of retrieving the first batch like this:  
+    Since **neural network training algorithms process data in batches**, it is more efficient to use an **iterator**. Instead of retrieving the first batch like this:
     ```python
     list(train_loader)[0]
     ```
@@ -163,24 +166,21 @@ def _(mo):
     next(iter(train_loader))
     ```
     This approach retrieves only the first batch without loading the entire dataset, making it memory-efficient and faster.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     Let's load the first batch of our data (image and label) and display it using the `matplotlib` library.
 
-    Recall that the shape returned by 
+    Recall that the shape returned by
     ```python
     next(iter(train_loader))
     ```
     is 32 by 3 by 32 by 32. This shape represents the batch size, number of channels, height, and width of the image, respectively.
-    """
-    )
+    """)
     return
 
 
@@ -207,17 +207,15 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    We now define our first CNN architecture. We will use this building block throughout the semester, so make sure you understand how it works. In particular, if we use the same padding and kernel (filter) size values for for both the width and height dimensions, the formula for the image size after the convolution or a max pooling layer is given by: 
+    mo.md(r"""
+    We now define our first CNN architecture. We will use this building block throughout the semester, so make sure you understand how it works. In particular, if we use the same padding and kernel (filter) size values for for both the width and height dimensions, the formula for the image size after the convolution or a max pooling layer is given by:
 
     $$
     \frac{width + 2 * padding - (kernelsize -1) - 1}{S} + 1
     $$
 
     Verify this with `torch.nn.Conv2d` and `torch.nn.MaxPool2d` function documentation.
-    """
-    )
+    """)
     return
 
 
@@ -395,21 +393,18 @@ def _(
         {'✅' if (not any([layer_shape[5][i] != layer_5_shape_ui[i].value for i in range(1)])) else '❌'}     
         """
     )
-
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     We can improve the architecture by adding two more common operations: Batch Normalization and Dropout.
 
     - Batch Normalization (BatchNorm) is a technique that normalizes the inputs of each layer across a mini-batch to have zero mean and unit variance, then scales and shifts them with learnable parameters. It stabilizes and speeds up training by reducing internal covariate shift.
 
     - Dropout is a regularization method where, during training, a random fraction of neurons are “dropped” (set to zero) in each forward pass, preventing co-adaptation of features and reducing overfitting.
-    """
-    )
+    """)
     return
 
 
@@ -482,13 +477,11 @@ def _(EnhancedCNN, device):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     ### Training the model
 
     The training is exactly the same as for our Fully Connected Neural Network.
-    """
-    )
+    """)
     return
 
 
@@ -608,7 +601,9 @@ def _(device, model, test_loader, torch):
 
 @app.cell(hide_code=True)
 def _(mo, test_accuracy):
-    mo.md(rf"""The model has an **{test_accuracy:.2f}%** on the test set, much better than the accuracy we got from a fully connected network and due to parameter sharing of convolutional layers the CNN we constructed has less parameters!""")
+    mo.md(rf"""
+    The model has an **{test_accuracy:.2f}%** on the test set, much better than the accuracy we got from a fully connected network and due to parameter sharing of convolutional layers the CNN we constructed has less parameters!
+    """)
     return
 
 

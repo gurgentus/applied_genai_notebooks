@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.21.1"
+__generated_with = "0.23.9"
 app = marimo.App(width="medium")
 
 
@@ -77,6 +77,12 @@ def _(train_dataset):
     return first_image, first_label
 
 
+@app.cell
+def _(first_image):
+    first_image.permute(1,2,0).squeeze().shape
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -105,6 +111,7 @@ def _(DataLoader, test_dataset, train_dataset):
 
 @app.cell
 def _(train_dataset, train_loader):
+    # NEVER DO THIS IN REAL LIFE
     print("Length of the train dataset: ", len(train_dataset))
     print("Length of list(train_loader): ", len(list(train_loader)))
     print("Type of the first element of list(train_loader): ", type(list(train_loader)[0]))
@@ -264,7 +271,7 @@ def _(autoencoder, device, loss_function, optimizer, train_loader):
             # with:
             train_loader_with_progress = tqdm(train_loader, desc=f'Epoch {epoch+1}/{epochs}')
             for data in train_loader_with_progress:
-                inputs, labels = data[0].to(device), data[1].to(device)
+                inputs, _ = data[0].to(device), data[1].to(device)
                 optimizer.zero_grad()
                 outputs = model(inputs)
                 loss = loss_function(outputs, inputs)

@@ -1,8 +1,8 @@
 # Practical 1: Energy-Based Methods
 
-This interactive marimo notebook covers energy-based models and their applications in generative modeling.
+This interactive marimo notebook covers building and training GANs for image generation.
 
-!!! note "Related Resources" - [View on GitHub](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_7_Practical_1_EnergyBasedMethods.py) - See the source code - [Run Locally](../running_locally.md) - Instructions for running with GPU acceleration support
+!!! note "Related Resources" - [View on GitHub](https://github.com/gurgentus/applied_genai_notebooks/blob/main/notebooks/Module_5_Practical_1_GAN.py) - See the source code - [Run Locally](../running_locally.md) - Instructions for running with GPU acceleration support
 
 !!! warning "Static preview — not interactive"
 The notebook below is a static export, so its sliders, dropdowns, and
